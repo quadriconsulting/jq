@@ -189,14 +189,14 @@ const Features = () => {
               <div className="text-champagne mb-6 group-hover:scale-110 transition-transform">
                 {feature.icon}
               </div>
-              <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
-              <p className="text-gray-400 leading-relaxed mb-6">{feature.description}</p>
+              <h3 className="text-2xl font-semibold mb-4 text-white">{feature.title}</h3>
+              <p className="text-gray-300 leading-relaxed mb-6">{feature.description}</p>
               
-              <div className="border-t border-champagne/20 pt-6">
-                <h4 className="text-sm uppercase tracking-wider text-champagne/70 mb-3 font-semibold">Focus Areas</h4>
+              <div className="border-t border-champagne/20 pt-6 mt-4">
+                <h4 className="text-sm uppercase tracking-wider text-champagne mb-3 font-semibold">Focus Areas</h4>
                 <ul className="space-y-2">
                   {feature.focuses.map((focus, focusIdx) => (
-                    <li key={focusIdx} className="flex items-start gap-3 text-gray-400 text-sm">
+                    <li key={focusIdx} className="flex items-start gap-3 text-gray-300 text-sm">
                       <span className="text-champagne mt-0.5">•</span>
                       <span>{focus}</span>
                     </li>
