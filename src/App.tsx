@@ -37,9 +37,11 @@ const Navbar = () => {
 // Hero Component
 const Hero = () => {
   const heroRef = useRef<HTMLDivElement>(null)
+  const heroBgRef = useRef<HTMLDivElement>(null)
   
   useGSAP(() => {
     const ctx = gsap.context(() => {
+      // Entrance animations
       gsap.from('.hero-title-word', {
         y: 100,
         opacity: 0,
@@ -63,6 +65,25 @@ const Hero = () => {
         delay: 1.3,
         ease: 'back.out(1.7)'
       })
+      
+      // Subtle background parallax (accessibility-aware)
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (!prefersReducedMotion && heroBgRef.current) {
+        const isMobile = window.matchMedia('(max-width: 768px)').matches
+        const maxY = isMobile ? 6 : 12
+        
+        gsap.to(heroBgRef.current, {
+          y: -maxY,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 0.4,
+            invalidateOnRefresh: true
+          }
+        })
+      }
     }, heroRef)
     
     return () => ctx.revert()
@@ -72,12 +93,21 @@ const Hero = () => {
     <section 
       ref={heroRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
-      style={{
-        backgroundImage: 'url(https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80&fm=jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }}
     >
+      {/* Background layer with subtle parallax */}
+      <div 
+        ref={heroBgRef}
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80&fm=jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          willChange: 'transform',
+          pointerEvents: 'none'
+        }}
+      />
+      
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-obsidian/90 via-obsidian/80 to-obsidian"></div>
       
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
