@@ -114,18 +114,43 @@ const Features = () => {
   const features = [
     {
       icon: <Shield className="w-12 h-12" />,
-      title: "Vulnerability Intelligence Architecture",
-      description: "End-to-end systems integrating NVD, EPSS, KEV data streams into actionable risk scoring frameworks that prioritize what matters."
+      title: "Application Security Architecture",
+      description: "Design and implementation of secure SDLC and AppSec programs across SAST, SCA, DAST, IaC and secrets detection, integrated into CI/CD with measurable risk reduction.",
+      focuses: [
+        "Secure SDLC + CI/CD integration",
+        "Vulnerability lifecycle + governance",
+        "Risk-based prioritisation and reporting"
+      ]
     },
     {
       icon: <Brain className="w-12 h-12" />,
-      title: "AI-Augmented Security Workflows",
-      description: "Intelligent automation that accelerates threat detection, incident response, and compliance validation without sacrificing precision."
+      title: "Vulnerability Intelligence & Risk Scoring",
+      description: "Architect multi-source vulnerability intelligence pipelines (NVD, GHSA, OSV, MITRE, CISA KEV, EPSS, ExploitDB) with deduplication, enrichment, and prioritisation using an RPS-style composite risk model.",
+      focuses: [
+        "Data ingestion + deduplication",
+        "Enrichment (EPSS/CVSS/KEV presence)",
+        "Actionable scoring and prioritisation"
+      ]
+    },
+    {
+      icon: <Brain className="w-12 h-12" />,
+      title: "AI-Augmented Security Automation",
+      description: "Build LLM-assisted remediation workflows that generate changes, review them, and enforce quality gates via GitHub before deployment—reducing toil while improving correctness.",
+      focuses: [
+        "LLM code generation + review loops",
+        "Automated validation + guardrails",
+        "GitHub workflow and gating"
+      ]
     },
     {
       icon: <Lock className="w-12 h-12" />,
-      title: "Enterprise-Scale Secure Systems",
-      description: "Comprehensive security architecture across Cloudflare, k3s, PKI, HSM, Zero Trust, and complete SDLC integration with SAST/DAST tooling."
+      title: "Cloud & Infrastructure Security Engineering",
+      description: "Secure cloud architecture using Zero Trust patterns, least-privilege access, and robust telemetry across cloud and container environments.",
+      focuses: [
+        "Zero Trust access controls",
+        "RBAC + tenant isolation",
+        "Observability and incident readiness"
+      ]
     }
   ]
   
@@ -154,7 +179,7 @@ const Features = () => {
           <span className="text-gradient">Core Capabilities</span>
         </h2>
         
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {features.map((feature, idx) => (
             <div 
               key={idx}
@@ -164,7 +189,19 @@ const Features = () => {
                 {feature.icon}
               </div>
               <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+              <p className="text-gray-400 leading-relaxed mb-6">{feature.description}</p>
+              
+              <div className="border-t border-champagne/20 pt-6">
+                <h4 className="text-sm uppercase tracking-wider text-champagne/70 mb-3 font-semibold">Focus Areas</h4>
+                <ul className="space-y-2">
+                  {feature.focuses.map((focus, focusIdx) => (
+                    <li key={focusIdx} className="flex items-start gap-3 text-gray-400 text-sm">
+                      <span className="text-champagne mt-0.5">•</span>
+                      <span>{focus}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ))}
         </div>
