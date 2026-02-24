@@ -115,41 +115,41 @@ const Features = () => {
     {
       icon: <Shield className="w-12 h-12" />,
       title: "Application Security Architecture",
-      description: "Design and implementation of secure SDLC and AppSec programs across SAST, SCA, DAST, IaC and secrets detection, integrated into CI/CD with measurable risk reduction.",
+      description: "Design and operationalisation of secure SDLC and enterprise AppSec programs across SAST, SCA, DAST, IaC and secrets detection — embedded directly into CI/CD to reduce vulnerability backlog and accelerate remediation cycles.",
       focuses: [
-        "Secure SDLC + CI/CD integration",
-        "Vulnerability lifecycle + governance",
-        "Risk-based prioritisation and reporting"
+        "Secure SDLC + CI/CD enforcement",
+        "Vulnerability lifecycle governance",
+        "Risk-based prioritisation aligned to business impact"
       ]
     },
     {
       icon: <Brain className="w-12 h-12" />,
       title: "Vulnerability Intelligence & Risk Scoring",
-      description: "Architect multi-source vulnerability intelligence pipelines (NVD, GHSA, OSV, MITRE, CISA KEV, EPSS, ExploitDB) with deduplication, enrichment, and prioritisation using an RPS-style composite risk model.",
+      description: "Architect multi-source vulnerability intelligence pipelines (NVD, GHSA, OSV, MITRE, CISA KEV, EPSS, ExploitDB) with deduplication, enrichment, and composite risk scoring that blends EPSS, CVSS, KEV presence and exploit signals into an actionable remediation queue.",
       focuses: [
-        "Data ingestion + deduplication",
-        "Enrichment (EPSS/CVSS/KEV presence)",
-        "Actionable scoring and prioritisation"
+        "Data ingestion + deduplication at scale",
+        "EPSS/CVSS/KEV enrichment and correlation",
+        "Actionable risk scoring and prioritised remediation"
       ]
     },
     {
       icon: <Brain className="w-12 h-12" />,
       title: "AI-Augmented Security Automation",
-      description: "Build LLM-assisted remediation workflows that generate changes, review them, and enforce quality gates via GitHub before deployment—reducing toil while improving correctness.",
+      description: "Build AI-assisted remediation workflows where generated fixes are reviewed and validated through deterministic quality gates before merge — reducing engineering toil without compromising security integrity.",
       focuses: [
-        "LLM code generation + review loops",
-        "Automated validation + guardrails",
-        "GitHub workflow and gating"
+        "Bounded LLM generation + review loops",
+        "Deterministic validation and guardrails",
+        "GitHub workflow enforcement before merge"
       ]
     },
     {
       icon: <Lock className="w-12 h-12" />,
       title: "Cloud & Infrastructure Security Engineering",
-      description: "Secure cloud architecture using Zero Trust patterns, least-privilege access, and robust telemetry across cloud and container environments.",
+      description: "Design and implement secure cloud architectures using Zero Trust principles, least-privilege access, and structured telemetry across cloud and container environments.",
       focuses: [
-        "Zero Trust access controls",
-        "RBAC + tenant isolation",
-        "Observability and incident readiness"
+        "Zero Trust access architecture",
+        "RBAC and tenant isolation",
+        "Observability, detection and incident readiness"
       ]
     }
   ]
@@ -257,11 +257,11 @@ const Philosophy = () => {
       
       <div className="relative z-10 max-w-4xl mx-auto text-center">
         <div className="philo-text">
-          <p className="text-2xl md:text-3xl text-gray-400 mb-8 leading-relaxed">
-            Most security programs focus on: <span className="line-through">checkbox compliance</span>
+          <p className="text-3xl md:text-5xl font-serif font-bold text-gray-300 mb-6 leading-tight">
+            Beyond compliance.
           </p>
           <p className="text-3xl md:text-5xl font-serif font-bold text-champagne leading-tight">
-            I focus on: risk-intelligent systems that adapt faster than threats evolve.
+            I build risk-intelligent security systems enforced by architecture.
           </p>
         </div>
       </div>
@@ -277,17 +277,22 @@ const Protocol = () => {
     {
       number: "01",
       title: "Threat Intelligence Mapping",
-      description: "Comprehensive vulnerability landscape analysis using NVD/EPSS/KEV correlation, identifying exploitability patterns and attack surface vectors."
+      description: "Comprehensive vulnerability landscape analysis using NVD, EPSS, KEV and exploit correlation to identify exposure patterns, exploit probability, and attack surface concentration."
     },
     {
       number: "02",
-      title: "AI-Driven Risk Prioritization",
-      description: "Machine learning models synthesize threat data with business context to generate dynamic risk scores and automated remediation workflows."
+      title: "AI-Driven Risk Prioritisation",
+      description: "Composite risk scoring blends threat intelligence with environmental context to generate a remediation queue engineers can trust — reducing noise and focusing on exploit-relevant risk."
     },
     {
       number: "03",
       title: "Secure Architecture Implementation",
-      description: "Deploy Zero Trust frameworks, PKI infrastructure, HSM key management, and continuous SAST/DAST validation across your entire SDLC."
+      description: "Implementation of Zero Trust controls, PKI and key management infrastructure, CI/CD security gates, and continuous SAST/DAST validation across the SDLC."
+    },
+    {
+      number: "04",
+      title: "Verification & Continuous Control",
+      description: "Deterministic enforcement gates, telemetry feedback loops, and measurable remediation SLAs ensure security improvements are provable, repeatable, and sustained."
     }
   ]
   
@@ -362,7 +367,7 @@ const CTA = () => {
           Let's Build Something <span className="text-champagne">Unbreakable</span>
         </h2>
         <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
-          Whether you need vulnerability intelligence architecture, AI-augmented security workflows, or enterprise-scale secure system design — let's start the conversation.
+          If you need vulnerability intelligence architecture, AI-assisted remediation workflows with deterministic safeguards, or enterprise-scale secure system design — let's start the conversation.
         </p>
         <a 
           href="mailto:jeremy@quadri.fit" 
