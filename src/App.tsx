@@ -107,40 +107,67 @@ const Hero = () => {
   )
 }
 
-// Features Component
+// Features Component (Stacking Cards)
 const Features = () => {
   const featuresRef = useRef<HTMLDivElement>(null)
   
-  const features = [
+  const capabilities = [
     {
+      number: "01",
       icon: <Shield className="w-12 h-12" />,
-      title: "Vulnerability Intelligence Architecture",
-      description: "End-to-end systems integrating NVD, EPSS, KEV data streams into actionable risk scoring frameworks that prioritize what matters."
+      title: "Application Security Architecture",
+      description: "Design and implementation of secure SDLC and AppSec programs across SAST, SCA, DAST, IaC and secrets detection, integrated into CI/CD with measurable risk reduction.",
+      focuses: [
+        "Secure SDLC + CI/CD integration",
+        "Vulnerability lifecycle + governance",
+        "Risk-based prioritisation and reporting"
+      ]
     },
     {
+      number: "02",
       icon: <Brain className="w-12 h-12" />,
-      title: "AI-Augmented Security Workflows",
-      description: "Intelligent automation that accelerates threat detection, incident response, and compliance validation without sacrificing precision."
+      title: "Vulnerability Intelligence & Risk Scoring",
+      description: "Architect multi-source vulnerability intelligence pipelines (NVD, GHSA, OSV, MITRE, CISA KEV, EPSS, ExploitDB) with deduplication, enrichment, and prioritisation using an RPS-style composite risk model.",
+      focuses: [
+        "Data ingestion + deduplication",
+        "Enrichment (EPSS/CVSS/KEV presence)",
+        "Actionable scoring and prioritisation"
+      ]
     },
     {
+      number: "03",
+      icon: <Brain className="w-12 h-12" />,
+      title: "AI-Augmented Security Automation",
+      description: "Build LLM-assisted remediation workflows that generate changes, review them, and enforce quality gates via GitHub before deployment—reducing toil while improving correctness.",
+      focuses: [
+        "LLM code generation + review loops",
+        "Automated validation + guardrails",
+        "GitHub workflow and gating"
+      ]
+    },
+    {
+      number: "04",
       icon: <Lock className="w-12 h-12" />,
-      title: "Enterprise-Scale Secure Systems",
-      description: "Comprehensive security architecture across Cloudflare, k3s, PKI, HSM, Zero Trust, and complete SDLC integration with SAST/DAST tooling."
+      title: "Cloud & Infrastructure Security Engineering",
+      description: "Secure cloud architecture using Zero Trust patterns, least-privilege access, and robust telemetry across cloud and container environments.",
+      focuses: [
+        "Zero Trust access controls",
+        "RBAC + tenant isolation",
+        "Observability and incident readiness"
+      ]
     }
   ]
   
   useGSAP(() => {
     const ctx = gsap.context(() => {
-      gsap.from('.feature-card', {
-        scrollTrigger: {
-          trigger: featuresRef.current,
-          start: 'top 70%'
-        },
-        y: 80,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.2,
-        ease: 'power3.out'
+      capabilities.forEach((_, idx) => {
+        ScrollTrigger.create({
+          trigger: `.capability-card-${idx}`,
+          start: 'top 20%',
+          end: 'bottom 20%',
+          pin: true,
+          pinSpacing: false
+        })
       })
     }, featuresRef)
     
@@ -148,23 +175,42 @@ const Features = () => {
   }, [])
   
   return (
-    <section id="services" ref={featuresRef} className="py-32 px-6 bg-obsidianLight">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-5xl md:text-6xl font-serif font-bold text-center mb-20">
+    <section id="services" ref={featuresRef} className="relative py-32 px-6 bg-obsidianLight">
+      <div className="max-w-4xl mx-auto">
+        <h2 className="text-5xl md:text-6xl font-serif font-bold text-center mb-32">
           <span className="text-gradient">Core Capabilities</span>
         </h2>
         
-        <div className="grid md:grid-cols-3 gap-8">
-          {features.map((feature, idx) => (
+        <div className="space-y-32">
+          {capabilities.map((capability, idx) => (
             <div 
               key={idx}
-              className="feature-card glass p-10 rounded-2xl border border-champagne/20 hover:border-champagne/50 transition-all group"
+              className={`capability-card-${idx} glass p-16 rounded-3xl border border-champagne/20 relative`}
+              style={{ zIndex: 10 + idx }}
             >
-              <div className="text-champagne mb-6 group-hover:scale-110 transition-transform">
-                {feature.icon}
+              <div className="flex items-start gap-6 mb-6">
+                <div className="text-champagne flex-shrink-0">
+                  {capability.icon}
+                </div>
+                <div className="text-6xl font-serif font-bold text-champagne/20">
+                  {capability.number}
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold mb-4">{feature.title}</h3>
-              <p className="text-gray-400 leading-relaxed">{feature.description}</p>
+              
+              <h3 className="text-4xl font-semibold mb-6">{capability.title}</h3>
+              <p className="text-xl text-gray-400 leading-relaxed mb-8">{capability.description}</p>
+              
+              <div className="border-t border-champagne/20 pt-6">
+                <h4 className="text-sm uppercase tracking-wider text-champagne/60 mb-4 font-semibold">Focus Areas</h4>
+                <ul className="space-y-3">
+                  {capability.focuses.map((focus, focusIdx) => (
+                    <li key={focusIdx} className="flex items-start gap-3">
+                      <span className="text-champagne mt-1.5">•</span>
+                      <span className="text-gray-300">{focus}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ))}
         </div>
