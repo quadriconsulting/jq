@@ -156,16 +156,26 @@ const Features = () => {
   
   useGSAP(() => {
     const ctx = gsap.context(() => {
-      gsap.from('.feature-card', {
-        scrollTrigger: {
-          trigger: featuresRef.current,
-          start: 'top 70%'
-        },
-        y: 80,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.2,
-        ease: 'power3.out'
+      gsap.utils.toArray('.feature-card').forEach((card: any, index) => {
+        gsap.fromTo(card, 
+          {
+            y: 80,
+            opacity: 0
+          },
+          {
+            scrollTrigger: {
+              trigger: card,
+              start: 'top 85%',
+              end: 'top 60%',
+              toggleActions: 'play none none none'
+            },
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            delay: index * 0.1,
+            ease: 'power3.out'
+          }
+        )
       })
     }, featuresRef)
     
