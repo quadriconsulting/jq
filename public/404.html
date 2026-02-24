@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Page Not Found</title>
+    <script>
+      (function() {
+        let base = '';
+        if (location.hostname.endsWith('github.io') && location.pathname.split('/').length > 2) {
+          base = '/' + location.pathname.split('/')[1];
+        }
+        if (base.endsWith('/')) base = base.slice(0, -1);
+        
+        let strippedPath = location.pathname;
+        if (base && strippedPath.startsWith(base)) {
+          strippedPath = strippedPath.substring(base.length);
+        }
+        if (!strippedPath.startsWith('/')) strippedPath = '/' + strippedPath;
+        if (strippedPath === '' || strippedPath === '/') strippedPath = '/';
+        
+        window.location.replace(base + '/?p=' + encodeURIComponent(strippedPath + location.search + location.hash));
+      })();
+    </script>
+</head>
+<body></body>
+</html>

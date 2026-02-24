@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeremy Quadri — Application Security Architect</title>
+    <meta name="description" content="Application Security Architect & AI-Driven Risk Systems Builder specializing in vulnerability intelligence and enterprise-scale secure system design.">
+    
+    <!-- Google Fonts - Midnight Luxe Preset -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SPA Restore Script for GitHub Pages -->
+    <script>
+      (function() {
+        const params = new URLSearchParams(window.location.search);
+        const path = params.get('p');
+        if (path) {
+          let base = '';
+          if (location.hostname.endsWith('github.io') && location.pathname.split('/').length > 2) {
+            base = '/' + location.pathname.split('/')[1];
+          }
+          const decodedPath = decodeURIComponent(path);
+          history.replaceState(null, '', base + decodedPath);
+        }
+      })();
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+</body>
+</html>
