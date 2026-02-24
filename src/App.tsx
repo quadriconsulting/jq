@@ -365,11 +365,11 @@ const CTA = () => {
           Whether you need vulnerability intelligence architecture, AI-augmented security workflows, or enterprise-scale secure system design — let's start the conversation.
         </p>
         <a 
-          href="mailto:jeremy@quadri.security" 
+          href="mailto:jeremy@quadri.fit" 
           className="inline-flex items-center gap-3 magnetic-btn bg-champagne text-obsidian px-12 py-6 rounded-full text-lg font-semibold hover:bg-yellow-300 transition-colors"
         >
           <Mail className="w-5 h-5" />
-          jeremy@quadri.security
+          jeremy@quadri.fit
         </a>
       </div>
     </section>
@@ -401,9 +401,10 @@ const Footer = () => {
           <div>
             <h4 className="text-champagne font-semibold mb-4">Connect</h4>
             <div className="space-y-2 text-sm text-gray-400">
-              <a href="mailto:jeremy@quadri.security" className="block hover:text-champagne transition-colors">Email</a>
-              <a href="https://linkedin.com/in/jeremyquadri" className="block hover:text-champagne transition-colors">LinkedIn</a>
-              <a href="https://github.com/jquadri" className="block hover:text-champagne transition-colors">GitHub</a>
+              <a href="mailto:jeremy@quadri.fit" className="block hover:text-champagne transition-colors">Email</a>
+              <a href="https://www.linkedin.com/in/jquadri/" className="block hover:text-champagne transition-colors">LinkedIn</a>
+              <a href="https://x.com/jquadri" className="block hover:text-champagne transition-colors">X (Twitter)</a>
+              <a href="https://github.com/quadriconsulting" className="block hover:text-champagne transition-colors">GitHub</a>
             </div>
           </div>
         </div>
@@ -416,7 +417,7 @@ const Footer = () => {
   )
 }
 
-// AI Concierge Component
+// Ask about Jeremy's work Component
 const AIConcierge = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([])
@@ -455,7 +456,7 @@ const AIConcierge = () => {
       setOffline(true)
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "Concierge is offline. Please email jeremy@quadri.security directly to start a conversation about your security architecture needs."
+        content: "Assistant is offline. Please email jeremy@quadri.fit directly to start a conversation about your security architecture needs."
       }])
     } finally {
       setLoading(false)
@@ -480,8 +481,8 @@ const AIConcierge = () => {
           {/* Header */}
           <div className="p-6 border-b border-champagne/20 flex justify-between items-center">
             <div>
-              <h3 className="font-semibold text-lg">AI Concierge</h3>
-              <p className="text-xs text-gray-500">Ask about Jeremy's work</p>
+              <h3 className="font-semibold text-lg">Ask about Jeremy's work</h3>
+              <p className="text-xs text-gray-500">Appsec, risk intelligence, and AI automation.</p>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
