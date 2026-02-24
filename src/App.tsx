@@ -19,7 +19,7 @@ const Navbar = () => {
   }, [])
   
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+    <nav className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
       scrolled ? 'glass py-4' : 'bg-transparent py-6'
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
@@ -270,7 +270,8 @@ const Protocol = () => {
           {steps.map((step, idx) => (
             <div 
               key={idx}
-              className={`protocol-card-${idx} glass p-16 rounded-3xl border border-champagne/20`}
+              className={`protocol-card-${idx} glass p-16 rounded-3xl border border-champagne/20 relative`}
+              style={{ zIndex: 10 + idx }}
             >
               <div className="text-8xl font-serif font-bold text-champagne/20 mb-6">
                 {step.number}
@@ -330,7 +331,7 @@ const CTA = () => {
 // Footer Component
 const Footer = () => {
   return (
-    <footer className="bg-obsidian rounded-t-[4rem] py-16 px-6">
+    <footer className="relative bg-obsidian rounded-t-[4rem] py-16 px-6 z-10">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-3 gap-12 mb-12">
           <div>
