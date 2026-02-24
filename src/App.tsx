@@ -316,7 +316,7 @@ const Protocol = () => {
     },
     {
       number: "03",
-      title: "Secure Architecture Implementation",
+      title: "Secure Architecture Delivery",
       description: "Implementation of Zero Trust controls, PKI and key management infrastructure, CI/CD security gates, and continuous SAST/DAST validation across the SDLC."
     },
     {
