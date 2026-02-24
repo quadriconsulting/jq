@@ -183,7 +183,8 @@ const Features = () => {
           {features.map((feature, idx) => (
             <div 
               key={idx}
-              className="feature-card glass p-10 rounded-2xl border border-champagne/20 hover:border-champagne/50 transition-all group"
+              className="feature-card glass p-10 rounded-2xl border border-champagne/20 hover:border-champagne/50 transition-all group relative"
+              style={{ minHeight: '400px' }}
             >
               <div className="text-champagne mb-6 group-hover:scale-110 transition-transform">
                 {feature.icon}
