@@ -179,12 +179,12 @@ const Features = () => {
           <span className="text-gradient">Core Capabilities</span>
         </h2>
         
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {features.map((feature, idx) => (
             <div 
               key={idx}
-              className="feature-card glass p-10 rounded-2xl border border-champagne/20 hover:border-champagne/50 transition-all group relative"
-              style={{ minHeight: '400px' }}
+              className="feature-card glass p-10 rounded-2xl border-2 border-champagne/30 hover:border-champagne/60 transition-all group relative"
+              style={{ minHeight: '450px' }}
             >
               <div className="text-champagne mb-6 group-hover:scale-110 transition-transform">
                 {feature.icon}
