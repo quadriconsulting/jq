@@ -1,5 +1,55 @@
 # Jeremy Quadri Portfolio - Version History
 
+## Version 1.1 (2026-02-24)
+
+**Status**: ✅ Updated Core Capabilities Section
+
+### Changes from v1.0
+- ✅ **Core Capabilities Section Updated**:
+  - Changed from 3-column to 2x2 grid layout
+  - Expanded from 3 to 4 capability cards
+  - Added detailed focus areas (3 bullets per card)
+  - Enhanced descriptions with specific technologies
+
+### New Capability Cards
+1. **Application Security Architecture**
+   - Focus: Secure SDLC + CI/CD integration
+   - Focus: Vulnerability lifecycle + governance
+   - Focus: Risk-based prioritisation and reporting
+
+2. **Vulnerability Intelligence & Risk Scoring**
+   - Focus: Data ingestion + deduplication
+   - Focus: Enrichment (EPSS/CVSS/KEV presence)
+   - Focus: Actionable scoring and prioritisation
+
+3. **AI-Augmented Security Automation**
+   - Focus: LLM code generation + review loops
+   - Focus: Automated validation + guardrails
+   - Focus: GitHub workflow and gating
+
+4. **Cloud & Infrastructure Security Engineering**
+   - Focus: Zero Trust access controls
+   - Focus: RBAC + tenant isolation
+   - Focus: Observability and incident readiness
+
+### Technical Details
+- Layout: 2x2 grid (responsive)
+- Cards: Glassmorphic with hover effects
+- Content: 80-110 words per card
+- Style: Enterprise-professional, high-signal
+
+### Archive
+**Version 1.1 Archive**: https://www.genspark.ai/api/files/s/fitMlUgQ
+
+### Restore Command
+```bash
+wget -O v1.1.tar.gz "https://www.genspark.ai/api/files/s/fitMlUgQ"
+tar -xzf v1.1.tar.gz
+cd home/user/webapp
+```
+
+---
+
 ## Version 1.0 - BASELINE (2026-02-24)
 
 **Status**: ✅ Production Ready - Protected Baseline
@@ -48,4 +98,4 @@ cd home/user/webapp
 
 ## Future Versions
 
-Version 1.1+ changes will be documented here.
+Version 1.2+ changes will be documented here.
