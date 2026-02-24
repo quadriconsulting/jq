@@ -73,7 +73,7 @@ const Hero = () => {
       ref={heroRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{
-        backgroundImage: 'url(https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&w=1920&q=80&fm=jpg)',
+        backgroundImage: 'url(https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80&fm=jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center'
       }}
@@ -199,7 +199,7 @@ const Philosophy = () => {
       ref={philoRef}
       className="relative py-40 px-6 overflow-hidden"
       style={{
-        backgroundImage: 'url(https://images.unsplash.com/photo-1618221118493-9cfa1a1c00da?auto=format&fit=crop&w=1920&q=80&fm=jpg)',
+        backgroundImage: 'url(https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1920&q=80&fm=jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed'
