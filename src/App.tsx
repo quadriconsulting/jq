@@ -517,7 +517,7 @@ const AIConcierge = () => {
           <div className="p-6 border-b border-champagne/20 flex justify-between items-center">
             <div>
               <h3 className="font-semibold text-lg">Ask about Jeremy's work</h3>
-              <p className="text-xs text-gray-500">Appsec, risk intelligence, and AI automation.</p>
+              <p className="text-xs text-gray-500">Ask about AppSec, risk scoring, and automation.</p>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
