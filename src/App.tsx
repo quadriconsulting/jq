@@ -328,14 +328,43 @@ const Protocol = () => {
   
   useGSAP(() => {
     const ctx = gsap.context(() => {
-      steps.forEach((_, idx) => {
-        ScrollTrigger.create({
-          trigger: `.protocol-card-${idx}`,
-          start: 'top 20%',
-          end: 'bottom 20%',
-          pin: true,
-          pinSpacing: false
-        })
+      // Responsive animation: pin stacking on desktop, simple reveal on mobile
+      ScrollTrigger.matchMedia({
+        // Desktop: keep stacking pin behavior
+        "(min-width: 769px)": () => {
+          steps.forEach((_, idx) => {
+            ScrollTrigger.create({
+              trigger: `.protocol-card-${idx}`,
+              start: 'top 20%',
+              end: 'bottom 20%',
+              pin: true,
+              pinSpacing: false
+            })
+          })
+        },
+        
+        // Mobile: disable pinning, use simple reveal
+        "(max-width: 768px)": () => {
+          steps.forEach((_, idx) => {
+            const card = `.protocol-card-${idx}`
+            gsap.fromTo(
+              card,
+              { opacity: 0, y: 12 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.35,
+                ease: "power1.out",
+                clearProps: "transform",
+                scrollTrigger: {
+                  trigger: card,
+                  start: "top 85%",
+                  toggleActions: "play none none none"
+                }
+              }
+            )
+          })
+        }
       })
     }, protocolRef)
     
@@ -349,7 +378,7 @@ const Protocol = () => {
           <span className="text-gradient">Engagement Protocol</span>
         </h2>
         
-        <div className="space-y-32">
+        <div className="space-y-10 md:space-y-32">
           {steps.map((step, idx) => (
             <div 
               key={idx}
