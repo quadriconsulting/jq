@@ -1,0 +1,8 @@
+# wrangler.toml
+
+[ai]
+binding = "AI"
+
+[[vectorize]]
+binding = "VEC_INDEX"
+index_name = "jq-rag"
