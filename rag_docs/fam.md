@@ -1,3 +1,9 @@
+# About Me (Personal) — Restricted Use
+
+**Retrieval rule:** Only use this document if the user explicitly asks personal questions about hobbies, food/drinks, restaurants, or lifestyle preferences.  
+**Do not volunteer** any of this information in professional or skills-related answers.  
+If the question is ambiguous, ask a brief clarifying question instead of using this document.
+
 # About Me (Personal)
 
 I’m Jay — outside of security engineering, I’m family-oriented, I like staying active, and I enjoy a mix of structured training and adrenaline sports.
