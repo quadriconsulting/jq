@@ -1,20 +1,23 @@
 // functions/api/rag/seed.js
 
 export async function onRequestPost({ request, env }) {
-const auth = request.headers.get("authorization") || request.headers.get("Authorization") || "";
-const m = auth.match(/^Bearer\s+(.+)$/i);
-const token = m ? m[1].trim() : "";
+  const auth = request.headers.get("authorization") || request.headers.get("Authorization") || "";
+  const m = auth.match(/^Bearer\s+(.+)$/i);
+  const token = m ? m[1].trim() : "";
 
-  // TEMP DEBUG: show only lengths + whether header exists
+  const url = new URL(request.url);
+  const cursor = Number(url.searchParams.get("cursor") || "0");
+  const limit = Math.min(Number(url.searchParams.get("limit") || "24"), 60);
+
+  // TEMP DEBUG (remove later)
   if (!env.ADMIN_TOKEN || token !== String(env.ADMIN_TOKEN).trim()) {
     return Response.json(
       {
         unauthorized: true,
         hasAuthHeader: Boolean(auth),
-        authStartsWithBearer: auth.startsWith("Bearer "),
+        authIsBearer: Boolean(m),
         sentTokenLen: token.length,
-        envTokenLen: (env.ADMIN_TOKEN ? String(env.ADMIN_TOKEN).trim().length : 0),
-        note: "Lengths only (safe). If envTokenLen=0, ADMIN_TOKEN not set for this deployment/environment.",
+        envTokenLen: env.ADMIN_TOKEN ? String(env.ADMIN_TOKEN).trim().length : 0,
       },
       { status: 401 }
     );
