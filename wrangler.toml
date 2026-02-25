@@ -5,4 +5,4 @@ binding = "AI"
 
 [[vectorize]]
 binding = "VEC_INDEX"
-index_name = "jq-rag"
+index_name = "jq-rag" 
