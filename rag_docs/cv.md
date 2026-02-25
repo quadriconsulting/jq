@@ -1,6 +1,6 @@
 # Jeremy “Jay” Quadri — CV (RAG Source)
 
-**Contact:** +44 7399 772152 · jeremy@quadriconsulting.com  
+**Contact:**  j@quadri.fit  
 **LinkedIn:** linkedin.com/in/jquadri/  
 **Location:** London, UK (work across UK/EU)
 
