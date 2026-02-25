@@ -10,9 +10,19 @@ export async function onRequestPost({ request, env }) {
 
   const wantPersonal = isExplicitPersonalIntent(message);
 
+  // Fail fast if bindings are missing
+  if (!env.AI || !env.VEC_INDEX) {
+    return Response.json(
+      { reply: "Assistant is not configured yet (missing AI/Vectorize bindings)." },
+      { status: 500 }
+    );
+  }
+
   // 1) Embed the query
   const qEmb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [message] });
   const qVec = (qEmb.data || qEmb)[0];
+
+  // ...rest of your function continues here
 
   // 2) Vector search
   const topK = 6;
