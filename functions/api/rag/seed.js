@@ -24,13 +24,13 @@ const token = m ? m[1].trim() : "";
   // In Pages Functions, you can fetch static assets by relative URL.
   // We'll maintain an explicit list to keep it deterministic.
   const files = [
-    "rag_docs/cv.md",
-    "rag_docs/cv_facts.md",
-    "rag_docs/cv_qa.md",
-    "rag_docs/projects.md",
-    "rag_docs/projects_qa.md",
-    "rag_docs/projects_facts.md",
-    "rag_docs/fam.md",
+    "cv.md",
+    "cv_facts.md",
+    "cv_qa.md",
+    "projects.md",
+    "projects_qa.md",
+    "projects_facts.md",
+    "fam.md",
   ];
 
   const docs = [];
