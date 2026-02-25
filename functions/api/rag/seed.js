@@ -1,8 +1,9 @@
 // functions/api/rag/seed.js
 
 export async function onRequestPost({ request, env }) {
-  const auth = request.headers.get("authorization") || "";
-  const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
+const auth = request.headers.get("authorization") || request.headers.get("Authorization") || "";
+const m = auth.match(/^Bearer\s+(.+)$/i);
+const token = m ? m[1].trim() : "";
 
   // TEMP DEBUG: show only lengths + whether header exists
   if (!env.ADMIN_TOKEN || token !== String(env.ADMIN_TOKEN).trim()) {
