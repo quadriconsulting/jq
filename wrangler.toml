@@ -1,13 +1,18 @@
-# wrangler.toml
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "webapp",
+  "compatibility_date": "2024-01-01",
+  "pages_build_output_dir": "./dist",
+  "compatibility_flags": ["nodejs_compat"],
 
-name = "webapp"
-compatibility_date = "2024-01-01"
-compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = "./dist"
+  "ai": {
+    "binding": "AI"
+  },
 
-[ai]
-binding = "AI"
-
-[[vectorize]]
-binding = "VEC_INDEX"
-index_name = "jq-rag"
+  "vectorize": [
+    {
+      "binding": "VEC_INDEX",
+      "index_name": "jq-rag"
+    }
+  ]
+}
