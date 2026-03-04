@@ -30,16 +30,14 @@ export async function onRequestPost({ request, env }) {
   // If Vectorize filtering is supported in your runtime, this is ideal:
   // - default: type=professional
   // - if personal intent: include both
-  let matches;
-  try {
-    const filter = wantPersonal ? undefined : { type: "professional" };
-    matches = await env.VEC_INDEX.query(qVec, { topK, filter, returnMetadata: true });
-  } catch {
-    // fallback: no filter support -> query and post-filter
-    const raw = await env.VEC_INDEX.query(qVec, { topK: 12, returnMetadata: true });
-    const arr = raw.matches || raw;
-    matches = { matches: arr.filter(m => wantPersonal || m?.metadata?.type !== "personal").slice(0, topK) };
-  }
+// DEBUG (temporary): inspect what Vectorize returned
+console.log(
+  "Vectorize sample match:",
+  JSON.stringify((matches.matches || []).slice(0, 2), null, 2)
+);
+
+
+  
 
   const ctx = (matches.matches || [])
     .map((m, i) => {
