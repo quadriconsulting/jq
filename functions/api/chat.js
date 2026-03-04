@@ -39,14 +39,14 @@ console.log(
 
   
 
-  const ctx = (matches.matches || [])
-    .map((m, i) => {
-      const meta = m.metadata || {};
-      const chunk = (meta.chunk || "").toString().trim();
-      return `[#${i + 1} ${meta.source || "doc"} | ${meta.section || "root"} | type=${meta.type || "?"}]
-  ${chunk || "(no chunk text stored in metadata)"}`;
-    })
-    .join("\n\n---\n\n");
+const ctx = (matches.matches || [])
+  .map((m, i) => {
+    const meta = m.metadata || {};
+    const snippet = (meta.chunk || "").toString().trim();
+    return `[#${i + 1} ${meta.source || "doc"} | ${meta.section || "root"} | type=${meta.type || "?"}]
+${snippet || "(no snippet stored in metadata.chunk)"}`;
+  })
+  .join("\n\n---\n\n");
   
 
   // 3) Build prompt (strict personal rule)
