@@ -122,9 +122,15 @@ def cf_upsert(vectors):
     }
     payload = {"vectors": vectors}
     r = requests.post(url, headers=headers, json=payload, timeout=60)
+
     if not r.ok:
-        raise RuntimeError(f"Upsert failed {r.status_code}: {r.text[:500]}")
-    return r.json()
+        raise RuntimeError(f"Upsert failed {r.status_code}: {r.text[:800]}")
+
+    data = r.json()
+    if not data.get("success"):
+        raise RuntimeError(f"Upsert success=false: {json.dumps(data)[:1200]}")
+
+    return data
 
 def main():
     now = datetime.utcnow().isoformat()
@@ -214,7 +220,7 @@ def main():
         cf_upsert(chunk)
         to_upsert = to_upsert[UPSERT_BATCH:]
         time.sleep(0.25)
-
+    print("Last upsert response:", data)
     print("DONE")
     print(f"Docs: {len(DOCS)}")
     print(f"Chunks: {len(items)}")
