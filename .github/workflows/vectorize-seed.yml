@@ -5,7 +5,6 @@ on:
   push:
     paths:
       - "rag_docs/**"
-      - "public/rag_docs/**"
       - "cv.md"
       - "cv_qa.md"
       - "cv_facts.md"
