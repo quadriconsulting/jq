@@ -1,19 +1,43 @@
+// functions/api/debug-vectorize.js
 export async function onRequestGet({ env }) {
-  const qEmb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: ["Jeremy core AppSec capabilities"] });
-  const qVec = (qEmb.data || qEmb)[0];
+  // Sanity checks
+  if (!env.VEC_INDEX) {
+    return Response.json(
+      { ok: false, error: "Missing Vectorize binding: env.VEC_INDEX" },
+      { status: 500 }
+    );
+  }
 
-  const res = await env.VEC_INDEX.query(qVec, { topK: 3, returnMetadata: true });
+  // A zero vector with the same dimensionality as your index (768)
+  const zero = Array(768).fill(0);
 
-  const matches = res.matches || res || [];
-  return Response.json({
-    topK: 3,
-    matchCount: matches.length,
-    sample: matches.map(m => ({
+  try {
+    const r = await env.VEC_INDEX.query(zero, { topK: 3, returnMetadata: true });
+
+    // Vectorize SDK responses can be { matches: [...] } or sometimes an array
+    const matches = r?.matches || r || [];
+    const sample = matches.slice(0, 2).map((m) => ({
       id: m.id,
       score: m.score,
+      metaKeys: Object.keys(m.metadata || {}),
       source: m.metadata?.source,
       section: m.metadata?.section,
-      hasChunk: !!m.metadata?.chunk
-    }))
-  });
+      type: m.metadata?.type,
+      // keep snippet short if present
+      chunkPreview: (m.metadata?.chunk || "").toString().slice(0, 180),
+    }));
+
+    return Response.json({
+      ok: true,
+      matchCount: matches.length,
+      sample,
+      note:
+        "If matchCount=0, your Pages binding is pointing at an empty index OR you seeded a different account/index than this Pages project uses.",
+    });
+  } catch (e) {
+    return Response.json(
+      { ok: false, error: String(e) },
+      { status: 500 }
+    );
+  }
 }
