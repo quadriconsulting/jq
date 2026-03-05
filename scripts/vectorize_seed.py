@@ -30,6 +30,14 @@ DOCS = [
     "fam.md",
 ]
 
+def make_vid(doc: str, title: str, idx: int) -> str:
+    # 52 chars total: prefix(6) + ":" + sec(12) + ":" + digest(32)
+    prefix = (doc.replace(".md", "")[:6] or "doc")
+    sec = slug(title)[:12]
+    digest = sha256(f"{doc}|{title}|{idx}")[:32]
+    return f"{prefix}:{sec}:{digest}"
+
+
 def sha256(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
 
@@ -72,7 +80,6 @@ def chunk_text(text: str, size: int, overlap: int):
 
 def find_doc_path(name: str) -> Path:
     candidates = [
-        Path("public") / "rag_docs" / name,
         Path("rag_docs") / name,
         Path(name),
     ]
@@ -135,8 +142,8 @@ def main():
         for (title, content) in split_by_headings(text):
             chunks = chunk_text(content, CHUNK_SIZE, CHUNK_OVERLAP)
             for idx, ch in enumerate(chunks):
-                # Stable ID: doc + section + index
-                vid = f"{doc}::{slug(title)}::{idx:04d}"
+                # Stable ID: doc + section + index                
+                vid = make_vid(doc, title, idx)
                 items.append({
                     "id": vid,
                     "text": ch,
