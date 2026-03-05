@@ -1,8 +1,9 @@
 // functions/api/chat.js
 // RAG Chat endpoint (NO SNIPPETS IN PROMPT)
-// - Uses Workers AI embeddings + Vectorize retrieval
-// - Personal info is NOT volunteered; only used on explicit personal intent
-// - Debug mode: /api/chat?debug=1 returns retrieval diagnostics (no LLM call)
+// - Workers AI embeddings -> Vectorize retrieval
+// - Always baseline query (no filter), then reliable post-filtering
+// - Personal info NOT volunteered; only used on explicit personal intent
+// - Debug: /api/chat?debug=1 returns retrieval diagnostics (no LLM call)
 
 export async function onRequestPost({ request, env }) {
   const url = new URL(request.url);
@@ -17,7 +18,6 @@ export async function onRequestPost({ request, env }) {
 
   const wantPersonal = isExplicitPersonalIntent(message);
 
-  // Fail fast if bindings are missing
   if (!env?.AI || !env?.VEC_INDEX) {
     return Response.json(
       {
@@ -28,7 +28,7 @@ export async function onRequestPost({ request, env }) {
     );
   }
 
-  // 1) Embed query (Workers AI) — normalize shape robustly
+  // 1) Embed query (Workers AI)
   let emb;
   try {
     emb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [message] });
@@ -56,67 +56,59 @@ export async function onRequestPost({ request, env }) {
     );
   }
 
-  // 2) Vector search (use the same signature that worked for your debug endpoint)
   const topK = 6;
-  let matches = [];
 
+  // 2) ALWAYS do baseline retrieval WITHOUT filter first
+  let baseline = [];
   try {
-    // Attempt server-side filter first (if supported)
-    if (!wantPersonal) {
-      try {
-        const r = await env.VEC_INDEX.query(qVec, {
-          topK,
-          filter: { type: "professional" },
-          returnMetadata: true,
-        });
-        matches = r?.matches || r || [];
-      } catch {
-        // Filter unsupported -> fall back to no-filter then post-filter
-        const r2 = await env.VEC_INDEX.query(qVec, { topK: 12, returnMetadata: true });
-        const raw = r2?.matches || r2 || [];
-        matches = raw.filter((m) => (m?.metadata?.type || "") !== "personal").slice(0, topK);
-      }
-    } else {
-      const r = await env.VEC_INDEX.query(qVec, { topK, returnMetadata: true });
-      matches = r?.matches || r || [];
-    }
+    const r0 = await env.VEC_INDEX.query(qVec, { topK: wantPersonal ? topK : 12, returnMetadata: true });
+    baseline = r0?.matches || r0 || [];
   } catch (e) {
-    return Response.json(
-      { reply: `Vectorize query error: ${String(e)}` },
-      { status: 500 }
-    );
+    return Response.json({ reply: `Vectorize query error: ${String(e)}` }, { status: 500 });
   }
 
-  // Debug mode: return diagnostics only (no OpenAI call)
+  // 3) Post-filter reliably
+  let matches = baseline;
+  if (!wantPersonal) {
+    matches = baseline
+      .filter((m) => (m?.metadata?.type || "") !== "personal")
+      .slice(0, topK);
+  } else {
+    matches = baseline.slice(0, topK);
+  }
+
+  // Debug mode: no OpenAI call
   if (debug) {
-    const sample = (matches || []).slice(0, 3).map((m) => ({
-      id: m?.id,
-      score: m?.score,
-      source: m?.metadata?.source,
-      section: m?.metadata?.section,
-      type: m?.metadata?.type,
-      metaKeys: Object.keys(m?.metadata || {}),
-      hasChunk: Boolean(m?.metadata?.chunk),
-      chunkLen: (m?.metadata?.chunk || "").toString().length,
-    }));
+    const pick = (arr) =>
+      (arr || []).slice(0, 3).map((m) => ({
+        id: m?.id,
+        score: m?.score,
+        source: m?.metadata?.source,
+        section: m?.metadata?.section,
+        type: m?.metadata?.type,
+        metaKeys: Object.keys(m?.metadata || {}),
+        hasChunk: Boolean(m?.metadata?.chunk),
+        chunkLen: (m?.metadata?.chunk || "").toString().length,
+      }));
 
     return Response.json({
       ok: true,
       step: "debug",
       wantPersonal,
       qVecLen: qVec.length,
+      baselineCount: baseline.length,
       matchCount: matches.length,
+      baselineSources: [...new Set((baseline || []).map((m) => m?.metadata?.source).filter(Boolean))],
       sources: [...new Set((matches || []).map((m) => m?.metadata?.source).filter(Boolean))],
-      sample,
+      sample: pick(matches),
       note:
-        matches.length === 0
-          ? "matchCount=0 means: query returned no results (index empty, wrong binding, or embeddings mismatch)."
-          : "Non-zero matches confirms retrieval is working. LLM call is skipped in debug mode.",
+        baseline.length === 0
+          ? "baselineCount=0 means: index empty OR wrong binding OR embeddings mismatch."
+          : "baselineCount>0 means index is populated + binding works. matchCount reflects post-filtering.",
     });
   }
 
-  // 3) Build prompt WITHOUT including retrieved snippets
-  // We only pass citations/headers to keep the model grounded without exposing chunk content.
+  // 4) Build prompt WITHOUT snippets (headers only)
   const ctxHeaders = (matches || [])
     .map((m, i) => {
       const meta = m?.metadata || {};
@@ -148,7 +140,6 @@ ${ctxHeaders || "(none)"}
 Now answer. If you cannot answer from the available context, say so and ask one short follow-up question.
 `.trim();
 
-  // 4) Call OpenAI
   const reply = await callOpenAI(env.OPENAI_API_KEY, system, user);
 
   return Response.json({
