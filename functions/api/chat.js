@@ -165,7 +165,7 @@ ${retrieved || "(no matches returned)"}
 Now answer the user. If context is empty or insufficient, say what is missing and ask one short follow-up question.
 `.trim();
 
-  const reply = await callOpenAI(env.OPENAI_API_KEY, system, user);
+  const reply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
 
   return Response.json({
     reply,
@@ -180,28 +180,48 @@ function normalizeMatches(res) {
   return { matches: [] };
 }
 
-async function callOpenAI(apiKey, system, user) {
+async function callOpenAI(apiKey, system, user, debugMode = false) {
   if (!apiKey) return "OpenAI API key missing on server.";
 
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "authorization": `Bearer ${apiKey}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.2,
-      max_tokens: 220,
-    }),
-  });
+  // Hard timeout: abort if OpenAI hasn't responded in 25s
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 25_000);
+
+  let resp;
+  try {
+    resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "authorization": `Bearer ${apiKey}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        temperature: 0.2,
+        max_tokens: 220,
+      }),
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    const isTimeout = e?.name === "AbortError";
+    return isTimeout
+      ? "The assistant took too long to respond. Please try again."
+      : "Unable to reach the assistant. Please try again.";
+  }
+  clearTimeout(timer);
 
   if (!resp.ok) {
-    return `Service error (${resp.status}).`;
+    // Safe user-facing message; debug gets status + truncated body
+    if (debugMode) {
+      const body = await resp.text().catch(() => "");
+      return `Service error (${resp.status}): ${body.slice(0, 120)}`;
+    }
+    return "The assistant is temporarily unavailable. Please try again.";
   }
 
   const data = await resp.json();
