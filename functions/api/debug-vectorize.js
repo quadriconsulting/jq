@@ -1,43 +1,44 @@
 // functions/api/debug-vectorize.js
-export async function onRequestGet({ env }) {
-  // Sanity checks
-  if (!env.VEC_INDEX) {
-    return Response.json(
-      { ok: false, error: "Missing Vectorize binding: env.VEC_INDEX" },
-      { status: 500 }
-    );
+
+export async function onRequestGet({ request, env }) {
+  if (!env.AI || !env.VEC_INDEX) {
+    return Response.json({ ok: false, error: "Missing AI/Vectorize bindings" }, { status: 500 });
   }
 
-  // A zero vector with the same dimensionality as your index (768)
-  const zero = Array(768).fill(0);
+  // Use a fixed query so this endpoint is stable
+  const probe = "SAST DAST SBOM risk scoring EPSS";
 
-  try {
-    const r = await env.VEC_INDEX.query(zero, { topK: 3, returnMetadata: true });
+  const emb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [probe] });
+  const vec = (emb?.data || emb || [])[0] || [];
 
-    // Vectorize SDK responses can be { matches: [...] } or sometimes an array
-    const matches = r?.matches || r || [];
-    const sample = matches.slice(0, 2).map((m) => ({
+  if (!Array.isArray(vec) || vec.length !== 768) {
+    return Response.json({ ok: false, error: "Bad embedding dims", got: Array.isArray(vec) ? vec.length : 0 }, { status: 500 });
+  }
+
+  const topK = 3;
+  const res = await env.VEC_INDEX.query(vec, { topK, returnMetadata: true });
+
+  const matches = Array.isArray(res?.matches) ? res.matches : (Array.isArray(res) ? res : []);
+  const sample = matches.map(m => {
+    const meta = m?.metadata || {};
+    const chunk = (meta.chunk || "").toString();
+    return {
       id: m.id,
       score: m.score,
-      metaKeys: Object.keys(m.metadata || {}),
-      source: m.metadata?.source,
-      section: m.metadata?.section,
-      type: m.metadata?.type,
-      // keep snippet short if present
-      chunkPreview: (m.metadata?.chunk || "").toString().slice(0, 180),
-    }));
+      metaKeys: Object.keys(meta),
+      source: meta.source,
+      section: meta.section,
+      type: meta.type,
+      updated_at: meta.updated_at,
+      chunkPreview: chunk.slice(0, 280),
+    };
+  });
 
-    return Response.json({
-      ok: true,
-      matchCount: matches.length,
-      sample,
-      note:
-        "If matchCount=0, your Pages binding is pointing at an empty index OR you seeded a different account/index than this Pages project uses.",
-    });
-  } catch (e) {
-    return Response.json(
-      { ok: false, error: String(e) },
-      { status: 500 }
-    );
-  }
+  return Response.json({
+    ok: true,
+    topK,
+    matchCount: matches.length,
+    sample,
+    note: "Non-zero matches confirms this Pages binding can read vectors from the index.",
+  });
 }
