@@ -59,8 +59,12 @@ export async function onRequestPost({ request, env }) {
     } catch (e2) {
       if (debug) {
         return Response.json({
-          reply: `Vectorize query error: ${String(e2)}`,
-        }, { status: 200 });
+          ok: false,
+          step: "debug",
+          wantPersonal,
+          qVecLen: qVec.length,
+          error: `Vectorize query error: ${String(e2)}`,
+        });
       }
       return Response.json(
         { reply: "Search is temporarily unavailable. Please try again." },
@@ -73,9 +77,19 @@ export async function onRequestPost({ request, env }) {
 
   // Debug mode returns SAFE diagnostics only
   if (debug) {
-    const baselineRes = await env.VEC_INDEX.query(qVec, { topK: 12, returnMetadata: true });
-    const baseline = normalizeMatches(baselineRes);
-    const bArr = baseline.matches || [];
+    let bArr = [];
+    try {
+      const baselineRes = await env.VEC_INDEX.query(qVec, { topK: 12, returnMetadata: true });
+      bArr = normalizeMatches(baselineRes).matches || [];
+    } catch (eDiag) {
+      return Response.json({
+        ok: false,
+        step: "debug",
+        wantPersonal,
+        qVecLen: qVec.length,
+        error: `Baseline query failed: ${String(eDiag)}`,
+      });
+    }
 
     const sources = [...new Set(arr.map(m => m?.metadata?.source).filter(Boolean))];
     const baselineSources = [...new Set(bArr.map(m => m?.metadata?.source).filter(Boolean))];
@@ -131,7 +145,7 @@ Brevity:
 
 Safety / hygiene:
 - Do not output secrets, tokens, API keys, or credentials.
-- Do not output executable commands (bash/powershell/curl) unless the user explicitly requests them.
+- Do not output runnable commands or code blocks unless the user explicitly requests them.
 - If the user asks for secrets or instructions to misuse systems, refuse.
 
 Grounding:
