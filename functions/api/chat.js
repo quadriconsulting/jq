@@ -124,9 +124,11 @@ export async function onRequestPost({ request, env }) {
   }
 
   // 3) Build retrieved context (use snippets for grounding)
+  // Cap each chunk to 800 chars to prevent prompt bloat
+  const CHUNK_CAP = 800;
   const retrieved = arr.map((m, i) => {
     const meta = m.metadata || {};
-    const chunk = (meta.chunk || "").toString().trim();
+    const chunk = (meta.chunk || "").toString().trim().slice(0, CHUNK_CAP);
     return `[#${i + 1} ${meta.source || "doc"} | ${meta.section || "root"} | type=${meta.type || "?"}]\n${chunk}`;
   }).join("\n\n---\n\n");
 
