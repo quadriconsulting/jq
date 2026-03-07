@@ -71,6 +71,7 @@ export async function onRequestPost({ request, env }) {
   // 3) Filtered query (professional-only unless explicit personal intent)
   const filterUsed = wantPersonal ? null : { type: "professional" };
   let matches = [];
+  let fallbackUsed = false;
   try {
     const filtered = await env.VEC_INDEX.query(qVec, { topK, filter: filterUsed || undefined, returnMetadata: true });
     matches = normalizeMatches(filtered).matches;
@@ -83,6 +84,7 @@ export async function onRequestPost({ request, env }) {
       matches = baselineMatches
         .filter(m => (m?.metadata?.type || "").toLowerCase() !== "personal")
         .slice(0, topK);
+      fallbackUsed = true;
     }
   } catch {
     // Fallback: post-filter from baseline (or a fresh broader query)
@@ -130,8 +132,9 @@ export async function onRequestPost({ request, env }) {
       baselineSources,
       filteredSources: sources,
       sources,
+      fallbackUsed,
       sample,
-      note: "baselineCount>0 confirms index populated + binding works; matchCount is post-filtered. If matchCount=0 with baselineCount>0, metadata index for 'type' is missing or vectors need re-seeding. matchCount>0 with filterUsed set may indicate warm-up fallback was used (post-filtered from baseline).",
+      note: "baselineCount>0 = index populated + binding OK. matchCount=0 with baselineCount>0 = metadata index missing or vectors need re-seeding. fallbackUsed=true = metadata filter returned 0 so results were post-filtered from baseline (normal during index warm-up).",
     });
   }
 
