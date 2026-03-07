@@ -74,6 +74,16 @@ export async function onRequestPost({ request, env }) {
   try {
     const filtered = await env.VEC_INDEX.query(qVec, { topK, filter: filterUsed || undefined, returnMetadata: true });
     matches = normalizeMatches(filtered).matches;
+
+    // Resilience: metadata index may be newly created / still propagating.
+    // If the filtered query succeeded but returned 0 results while the
+    // baseline found vectors, fall back to post-filtering the baseline so
+    // the chat never looks broken during index warm-up.
+    if (!wantPersonal && matches.length === 0 && baselineCount > 0) {
+      matches = baselineMatches
+        .filter(m => (m?.metadata?.type || "").toLowerCase() !== "personal")
+        .slice(0, topK);
+    }
   } catch {
     // Fallback: post-filter from baseline (or a fresh broader query)
     try {
@@ -121,7 +131,7 @@ export async function onRequestPost({ request, env }) {
       filteredSources: sources,
       sources,
       sample,
-      note: "baselineCount>0 confirms index populated + binding works; matchCount is post-filtered. If matchCount=0 with baselineCount>0, metadata index for 'type' is missing or vectors need re-seeding.",
+      note: "baselineCount>0 confirms index populated + binding works; matchCount is post-filtered. If matchCount=0 with baselineCount>0, metadata index for 'type' is missing or vectors need re-seeding. matchCount>0 with filterUsed set may indicate warm-up fallback was used (post-filtered from baseline).",
     });
   }
 
