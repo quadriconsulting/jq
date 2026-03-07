@@ -239,7 +239,7 @@ Answer the user using retrieved context as the primary source for Jeremy-specifi
 
   return Response.json({
     reply,
-    suggested: suggestFollowups(wantPersonal),
+    suggested: buildSuggestedFromReply(reply, wantPersonal, message),
   });
 }
 
@@ -331,6 +331,152 @@ function suggestFollowups(wantPersonal) {
     "Describe your SAST/auto-fix safety approach.",
     "How do you build risk scoring from EPSS/CVSS/KEV?",
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Reply-aware suggestion builder
+// Returns exactly 3 short question strings.
+// Priority:
+//   1. Offer bullets extracted from the reply itself
+//   2. Keyword-pool routing based on reply + user message
+//   3. Professional default pool
+// No extra model calls; pure string parsing.
+// ---------------------------------------------------------------------------
+
+function buildSuggestedFromReply(replyText, wantPersonal, userMessage) {
+  // 1) Try to extract offer bullets from the reply
+  const extracted = extractOfferLines(replyText);
+
+  if (extracted.length >= 3) {
+    return extracted.slice(0, 3);
+  }
+
+  // 2) Fill remainder from keyword-pool routing
+  const pool = pickPool(replyText, userMessage, wantPersonal);
+  const combined = dedup([...extracted, ...pool]);
+  return combined.slice(0, 3);
+}
+
+// Scans the first 1200 chars of replyText for lines that look like
+// "I can help/cover/explain ..." offer bullets and converts them to questions.
+function extractOfferLines(replyText) {
+  const raw = (replyText || "").slice(0, 1200);
+
+  // Normalise: if a line contains an inline "For example, I can …" or
+  // "I can explain/cover/help…" fragment (not at the start of the line),
+  // split it out so we capture only the offer clause, not the preamble.
+  const normalized = raw.replace(
+    /[^.\n]*?\b(for example[,: ]+i can [^\n.!?]+)/gi,
+    (_, offer) => "\n" + offer,
+  );
+
+  const lines = normalized.split(/\n/);
+  const results = [];
+
+  for (const rawLine of lines) {
+    if (results.length >= 5) break;
+    const line = rawLine.trim();
+    if (!line) continue;
+
+    const lower = line.toLowerCase();
+    const hasBullet = /^[-•*]/.test(line);
+    const hasOffer  = lower.includes("i can help") ||
+                      lower.includes("i can cover") ||
+                      lower.includes("i can explain") ||
+                      lower.includes("i can walk") ||
+                      lower.includes("i can discuss");
+    const hasForExample = lower.includes("for example") && lower.includes("i can");
+
+    if (!hasBullet && !hasOffer && !hasForExample) continue;
+
+    // Strip bullet prefix and common leading phrases
+    let cleaned = line
+      .replace(/^[-•*]\s*/, "")
+      .replace(/^for example[,:]?\s*/i, "")
+      .replace(/^i can help with[:]?\s*/i, "")
+      .replace(/^i can help[:]?\s*/i, "")
+      .replace(/^i can cover[:]?\s*/i, "")
+      .replace(/^i can explain[:]?\s*/i, "")
+      .replace(/^i can walk you through[:]?\s*/i, "")
+      .replace(/^i can discuss[:]?\s*/i, "")
+      .replace(/^i can[:]?\s*/i, "")
+      .trim();
+
+    if (!cleaned) continue;
+
+    // Convert to a question if not already one
+    let question;
+    if (/[?]$/.test(cleaned)) {
+      question = cleaned;
+    } else {
+      // Capitalise first letter after stripping any leading punctuation
+      const firstChar = cleaned.replace(/^[^a-zA-Z0-9]+/, "");
+      const capitalised = firstChar.charAt(0).toUpperCase() + firstChar.slice(1);
+      // Clean up double punctuation that can appear if cleaned ends with a period
+      question = ("Can you " + capitalised + "?").replace(/\.\?$/, "?");
+    }
+
+    // Safety-trim to 90 chars
+    if (question.length > 90) {
+      question = question.slice(0, 87).trimEnd() + "…";
+    }
+
+    results.push(question);
+  }
+
+  return results;
+}
+
+// Returns a pool of 3 suggestions based on keyword routing.
+function pickPool(replyText, userMessage, wantPersonal) {
+  if (wantPersonal) {
+    return [
+      "What hobbies or sports do you enjoy?",
+      "What food and drink do you like?",
+      "What do you do outside of work?",
+    ];
+  }
+
+  const haystack = ((replyText || "") + " " + (userMessage || "")).toLowerCase();
+
+  // Risk scoring
+  if (/\bepss\b|\bcvss\b|\bkev\b|\brisk scor|\bpriori|\bexploit intel/.test(haystack)) {
+    return [
+      "How do you combine EPSS, CVSS, KEV, and exploit intel?",
+      "What does your risk scoring output look like in practice?",
+      "How do you avoid noisy false positives in scoring?",
+    ];
+  }
+
+  // CI/CD gates & remediation
+  if (/\bfail-closed\b|\bautonom|\bremediat|\bci\/cd\b|\bgates?\b|\bpatch\b|auto.?fix/.test(haystack)) {
+    return [
+      "What deterministic gates must a fix pass?",
+      "How do you prevent unsafe or non-compiling patches?",
+      "When do you require human review vs auto-merge?",
+    ];
+  }
+
+  // Tooling / platform
+  if (/\bsast\b|\bdast\b|\bsca\b|\bsbom\b|\biac\b|\bsecrets\b|\bscanner/.test(haystack)) {
+    return [
+      "Which scanners do you route and why?",
+      "How do you handle SBOM + dependency risk at scale?",
+      "How do you operationalize findings into tickets/SLAs?",
+    ];
+  }
+
+  // Professional default
+  return [
+    "What AppSec areas are you strongest in?",
+    "Describe your SAST/auto-fix safety approach.",
+    "How do you build risk scoring from EPSS/CVSS/KEV?",
+  ];
+}
+
+// Deduplicates while preserving insertion order.
+function dedup(arr) {
+  return Array.from(new Set(arr || []));
 }
 
 function uniq(arr) {
