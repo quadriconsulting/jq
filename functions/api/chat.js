@@ -69,10 +69,10 @@ export async function onRequestPost({ request, env }) {
   );
 
   // 3) Filtered query (professional-only unless explicit personal intent)
+  const filterUsed = wantPersonal ? null : { type: "professional" };
   let matches = [];
   try {
-    const filter = wantPersonal ? undefined : { type: "professional" };
-    const filtered = await env.VEC_INDEX.query(qVec, { topK, filter, returnMetadata: true });
+    const filtered = await env.VEC_INDEX.query(qVec, { topK, filter: filterUsed || undefined, returnMetadata: true });
     matches = normalizeMatches(filtered).matches;
   } catch {
     // Fallback: post-filter from baseline (or a fresh broader query)
@@ -114,12 +114,14 @@ export async function onRequestPost({ request, env }) {
       step: "debug",
       wantPersonal,
       qVecLen,
+      filterUsed,
       baselineCount,
       matchCount,
       baselineSources,
+      filteredSources: sources,
       sources,
       sample,
-      note: "baselineCount>0 confirms index populated + binding works; matchCount is post-filtered.",
+      note: "baselineCount>0 confirms index populated + binding works; matchCount is post-filtered. If matchCount=0 with baselineCount>0, metadata index for 'type' is missing or vectors need re-seeding.",
     });
   }
 
