@@ -1,36 +1,47 @@
 // functions/api/debug-vectorize.js
 
-export async function onRequestGet({ request, env }) {
+export async function onRequestGet({ env }) {
   if (!env.AI || !env.VEC_INDEX) {
     return Response.json({ ok: false, error: "Missing AI/Vectorize bindings" }, { status: 500 });
   }
 
-  // Use a fixed query so this endpoint is stable
   const probe = "SAST DAST SBOM risk scoring EPSS";
 
-  const emb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [probe] });
-  const vec = (emb?.data || emb || [])[0] || [];
+  let vec = [];
+  try {
+    const emb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [probe] });
+    vec = (emb?.data || emb || [])[0] || [];
+  } catch (e) {
+    return Response.json({ ok: false, error: "Embedding failed" }, { status: 500 });
+  }
 
   if (!Array.isArray(vec) || vec.length !== 768) {
-    return Response.json({ ok: false, error: "Bad embedding dims", got: Array.isArray(vec) ? vec.length : 0 }, { status: 500 });
+    return Response.json(
+      { ok: false, error: "Bad embedding dims", got: Array.isArray(vec) ? vec.length : 0 },
+      { status: 500 }
+    );
   }
 
   const topK = 3;
   const res = await env.VEC_INDEX.query(vec, { topK, returnMetadata: true });
 
   const matches = Array.isArray(res?.matches) ? res.matches : (Array.isArray(res) ? res : []);
-  const sample = matches.map(m => {
+
+  const sample = matches.map((m) => {
     const meta = m?.metadata || {};
-    const chunk = (meta.chunk || "").toString();
+    const rawType = meta.type;
+    const normalizedType = String(rawType || "").trim().toLowerCase();
+
     return {
-      id: m.id,
-      score: m.score,
+      id: m?.id || meta?.id || "(missing-id)",
+      score: m?.score,
       metaKeys: Object.keys(meta),
       source: meta.source,
       section: meta.section,
-      type: meta.type,
+      type: rawType,
+      normalizedType,
       updated_at: meta.updated_at,
-      chunkPreview: chunk.slice(0, 280),
+      chunkLen: String(meta.chunk || "").length,
     };
   });
 
