@@ -1,5 +1,12 @@
 // functions/api/chat.js
 
+// Reply length policy
+// SOFT_CHAR_TARGET: model instruction target (best-effort)
+// HARD_CHAR_CAP:    server-side ceiling; replies longer than this are cleanly truncated
+//                  (bypassed when user explicitly requests detail)
+const SOFT_CHAR_TARGET = 280;
+const HARD_CHAR_CAP    = 480;
+
 export async function onRequestPost({ request, env }) {
   const url = new URL(request.url);
   const debug = url.searchParams.get("debug") === "1";
@@ -175,7 +182,8 @@ LANGUAGE RULES:
 
 Style:
 - Be direct and specific.
-- Target ~200 tokens; treat ~280 characters as a “try to be brief” guideline.
+- Default to <= 280 characters. If you must go longer, stay under ~480 characters.
+- Only exceed 280 characters when the user explicitly requests detail (e.g. "detailed", "deep dive", "step-by-step", "explain fully").
 - Use bullets when helpful.
 
 Safety:
@@ -194,7 +202,12 @@ ${ctx || "(no matches returned)"}
 Now answer the user. If the answer is not supported by the retrieved context, say so and ask one short follow-up question.
 `.trim();
 
-  const reply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
+  const rawReply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
+
+  // 7) Hard char cap — bypass when user explicitly wants detail
+  const reply = wantsDetail(message)
+    ? rawReply.trim()
+    : capReply(rawReply, HARD_CHAR_CAP);
 
   return Response.json({
     reply,
@@ -315,4 +328,37 @@ async function safeText(resp) {
   } catch {
     return "";
   }
+}
+
+// Returns true when the user explicitly requests a long / detailed answer.
+// In that case the hard char cap is skipped.
+function wantsDetail(q) {
+  const s = q.toLowerCase();
+  return (
+    s.includes("detailed") ||
+    s.includes("deep dive") ||
+    s.includes("step-by-step") ||
+    s.includes("step by step") ||
+    s.includes("explain fully") ||
+    s.includes("in detail") ||
+    s.includes("long") ||
+    s.includes("comprehensive")
+  );
+}
+
+// Caps a reply at `cap` characters, cutting at the last sentence boundary
+// before the cap, or the last space, then appending "…".
+function capReply(text, cap) {
+  const s = (text || "").trim();
+  if (s.length <= cap) return s;
+
+  const window = s.slice(0, cap);
+  // prefer last sentence-ending punctuation
+  const sentEnd = Math.max(
+    window.lastIndexOf("."),
+    window.lastIndexOf("?"),
+    window.lastIndexOf("!"),
+  );
+  const cut = sentEnd > cap * 0.5 ? sentEnd + 1 : window.lastIndexOf(" ");
+  return (cut > 0 ? s.slice(0, cut) : window).trimEnd() + "…";
 }
