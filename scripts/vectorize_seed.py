@@ -21,6 +21,7 @@ UPSERT_BATCH = int(os.environ.get("UPSERT_BATCH", "64"))
 CACHE_DB = os.environ.get("CACHE_DB", ".cache/vector_cache.sqlite")
 
 DOCS = [
+    "about.md",
     "cv.md",
     "cv_facts.md",
     "cv_qa.md",
