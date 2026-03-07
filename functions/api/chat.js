@@ -69,11 +69,23 @@ export async function onRequestPost({ request, env }) {
   );
 
   // 3) Filtered query (professional-only unless explicit personal intent)
+  const filterUsed = wantPersonal ? null : { type: "professional" };
   let matches = [];
+  let fallbackUsed = false;
   try {
-    const filter = wantPersonal ? undefined : { type: "professional" };
-    const filtered = await env.VEC_INDEX.query(qVec, { topK, filter, returnMetadata: true });
+    const filtered = await env.VEC_INDEX.query(qVec, { topK, filter: filterUsed || undefined, returnMetadata: true });
     matches = normalizeMatches(filtered).matches;
+
+    // Resilience: metadata index may be newly created / still propagating.
+    // If the filtered query succeeded but returned 0 results while the
+    // baseline found vectors, fall back to post-filtering the baseline so
+    // the chat never looks broken during index warm-up.
+    if (!wantPersonal && matches.length === 0 && baselineCount > 0) {
+      matches = baselineMatches
+        .filter(m => (m?.metadata?.type || "").toLowerCase() !== "personal")
+        .slice(0, topK);
+      fallbackUsed = true;
+    }
   } catch {
     // Fallback: post-filter from baseline (or a fresh broader query)
     try {
@@ -114,12 +126,15 @@ export async function onRequestPost({ request, env }) {
       step: "debug",
       wantPersonal,
       qVecLen,
+      filterUsed,
       baselineCount,
       matchCount,
       baselineSources,
+      filteredSources: sources,
       sources,
+      fallbackUsed,
       sample,
-      note: "baselineCount>0 confirms index populated + binding works; matchCount is post-filtered.",
+      note: "baselineCount>0 = index populated + binding OK. matchCount=0 with baselineCount>0 = metadata index missing or vectors need re-seeding. fallbackUsed=true = metadata filter returned 0 so results were post-filtered from baseline (normal during index warm-up).",
     });
   }
 

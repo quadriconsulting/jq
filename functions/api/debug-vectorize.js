@@ -42,6 +42,7 @@ export async function onRequestGet({ env }) {
       normalizedType,
       updated_at: meta.updated_at,
       chunkLen: String(meta.chunk || "").length,
+      chunkPreview: String(meta.chunk || "").slice(0, 180) || null,
     };
   });
 
