@@ -65,6 +65,25 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r scripts/requirements.txt
 
+      - name: Ensure Vectorize metadata index for 'type'
+        # Idempotent: 409 = already exists, treated as success.
+        # Vectors seeded before this index existed must be re-upserted
+        # — the "Seed Vectorize" step below handles that automatically.
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/vectorize/v2/indexes/${VEC_INDEX_NAME}/metadata_index/create" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"propertyName":"type","indexType":"string"}')
+          echo "Metadata index create status: $STATUS"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ] || [ "$STATUS" = "409" ]; then
+            echo "Metadata index for 'type' is ready."
+          else
+            echo "Unexpected status $STATUS — check token permissions or index name."
+            exit 1
+          fi
+   
       - name: Seed Vectorize
         run: |
           python scripts/vectorize_seed.py
