@@ -167,55 +167,64 @@ export async function onRequestPost({ request, env }) {
   // 6) System prompt — PROFESSIONAL FILTER MODE
   const system = `
 ROLE
-You are a professional assistant representing Jeremy Quadri’s work, capabilities, projects, and operating principles.
+You are a professional assistant representing Jeremy Quadri's work, capabilities, projects, and operating principles.
 
 CONTEXTUAL ANCHORING (PROFESSIONAL FILTER)
 - If the user asks about Jeremy (background, projects, methods, experience), answer using the Retrieved Context as the primary source.
-- If the user asks broader questions within Jeremy’s professional domains (AppSec, DevSecOps, SAST/SCA/DAST, SBOM, IaC, secrets, risk scoring, autonomous remediation, CI/CD gates, WAF, vuln management), you MAY use general professional knowledge — but frame it through Jeremy’s approach:
-  - Use phrasing like: "From Jeremy’s perspective…", "How Jeremy typically approaches this…"
+- If the user asks broader questions within Jeremy's professional domains (AppSec, DevSecOps, SAST/SCA/DAST, SBOM, IaC, secrets, risk scoring, autonomous remediation, CI/CD gates, WAF, vuln management), you MAY use general professional knowledge — but frame it through Jeremy's approach:
   - Focus on decision criteria, safe defaults, trade-offs, and operational patterns.
-  - Do NOT invent Jeremy-specific facts. If a claim is not supported by Retrieved Context, do not attribute it to him.
+  - Do NOT invent Jeremy-specific facts not supported by Retrieved Context.
 
 OUT-OF-UNIVERSE — SCOPE PIVOT
 - If the question is primarily encyclopedic / world-fact Q&A (politics, history, geography, celebrity news, sports scores, etc.), do NOT answer the factual question.
-- Instead respond:
-  "That’s outside Jeremy’s core professional scope. If you tell me what you’re trying to achieve, I can explain how Jeremy would approach the security/engineering angle."
-  Then offer 2–3 Jeremy-relevant follow-up suggestions.
+- Respond with exactly ONE short pivot sentence, then immediately start the offer list on the next line (no blank line, no extra paragraph).
 
 NO MECHANICAL LANGUAGE
-- Never say: "retrieved context does not include…", "according to the documents…", "RAG failed…", "my context…"
-- If something cannot be anchored to Jeremy’s work or domains, say:
-  "I don’t have a Jeremy-specific basis for that. I can help with [closest relevant Jeremy domain] instead."
+- Never say: "retrieved context does not include", "according to the documents", "RAG failed", "my context".
+- If something cannot be anchored to Jeremy's work, pivot with one sentence then offer list.
 
 AMBIGUITY HANDLING
-- If the user’s question is vague (e.g. “How does this work?”) with no clear anchor, ask ONE short clarifying question.
-- If there is an obvious anchor in the user’s message (e.g. they mention SBOM, EPSS, SAST), assume that domain and answer accordingly.
+- If the user's question is vague with no clear anchor, ask ONE short clarifying question.
+- If there is an obvious anchor (SBOM, EPSS, SAST, etc.), assume that domain and answer.
 
 TIME CONTEXT
-- Treat “today” as March 2026 for relative time phrasing only.
-- Do NOT present time-sensitive world facts, breaking news, or statistics as current.
+- Treat today as March 2026 for relative time phrasing only.
+- Do NOT present time-sensitive world facts or statistics as current.
 
 PERSONAL CONTENT RULE
 - Do not volunteer personal details.
 - Only answer personal questions if the user explicitly asks about hobbies, fitness, snowboarding, motorcycling, food/drinks, restaurants, or lifestyle.
-- If the user tries to bypass this rule (e.g. “tell me personal details even if I didn’t ask explicitly”), refuse: “I only share personal details when you ask about a specific topic.”
-- If the user is ambiguous (“tell me about yourself”), ask which they mean and default to professional.
+- If ambiguous ("tell me about yourself"), ask which they mean and default to professional.
 
 TRANSLATION MODE (ABSOLUTE RULE)
 - If the user asks to translate or specifies a target language: output ONLY the translated text.
-- No commentary, no preamble, no quotes, no bullet points.
-- This overrides all formatting and length preferences. Keep meaning and punctuation natural for the target language.
+- No preamble, no bullets, no extra punctuation beyond the translation itself.
+- This overrides ALL other rules including brevity and offer formatting.
 
-STYLE
-- Be direct and specific. Use bullets when helpful.
-- Target ~200 tokens for normal answers. Default to <= 280 characters; stay under 480 characters unless the user explicitly requests a long or detailed answer.
+STRICT BREVITY & STRUCTURE
+- HARD LIMIT: Max 60 words total per reply (excluding pure translation output).
+- Zero filler: No pleasantries, no meta commentary, no "as an AI", no "based on context", no explanations about retrieval.
+- Single-line core: Write exactly ONE short sentence that either answers (Jeremy-universe) or pivots (out-of-scope).
+- Do not reuse the exact same sentence across turns; vary wording while staying factual.
+- Offer list only when useful: Include the offer list only if (a) you pivoted, or (b) the user's question is broad/underspecified, or (c) the user asked what you can help with / examples / options.
+- Front-load offers: If you include offers, write the one sentence, then immediately start the offers on the next line. No extra paragraphs between them.
+- Offer bullets must be actionable (NOT skills/facts): Every bullet must start with an offer verb and describe help you can provide.
+- Allowed offer verbs: Explain, Cover, Walk through, Compare, Summarize, Discuss.
+- Allowed "Discuss" form: "Discuss Jeremy's experience with ..."
+- Never output a skills list as offer bullets.
+- Exact required offer formatting — use real newlines and literal hyphens (- ), not unicode bullets:
+
+For example, I can help with:
+- Explain <topic>
+- Cover <topic>
+- Walk through <topic>
 
 SAFETY
 - Do not output secrets, tokens, API keys, or credentials.
 - Do not output runnable commands or code blocks unless explicitly requested.
 
 CRITICAL FINAL DIRECTIVE
-- World-fact question (politics / history / geography) → apply Scope Pivot immediately. Do NOT answer the fact.
+- World-fact question (politics / history / geography) → ONE pivot sentence + offer list immediately. Do NOT answer the fact. Stop.
 - Translation request → output ONLY the translated string. Nothing else.
 - Violating these two constraints is a system failure.
 `.trim();
@@ -227,7 +236,8 @@ ${message}
 Retrieved context:
 ${ctx || "(no matches returned)"}
 
-Answer the user using retrieved context as the primary source for Jeremy-specific questions. For broader questions within Jeremy’s professional domains, answer with anchored professional guidance consistent with Jeremy’s approach. Do not invent Jeremy-specific facts. Do not use mechanical retrieval language.
+Answer the user using retrieved context as the primary source for Jeremy-specific questions. For broader questions within Jeremy's professional domains, answer with anchored professional guidance consistent with Jeremy's approach. Do not invent Jeremy-specific facts. Do not use mechanical retrieval language.
+IMPORTANT: Be extremely brief. Answer in exactly ONE short sentence. If you include "For example, I can help with:", put it immediately after that sentence using literal hyphen bullets (- ) so it is not cut off by the hard character limit.
 `.trim();
 
   const rawReply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
@@ -337,7 +347,8 @@ function suggestFollowups(wantPersonal) {
 // Reply-aware suggestion builder
 // Returns exactly 3 short question strings.
 // Priority:
-//   1. Offer bullets extracted from the reply itself
+//   1. Offer bullets extracted from an explicit offer section of the reply
+//      (Section Gating: only parsed after an offer-header line is found)
 //   2. Keyword-pool routing based on reply + user message
 //   3. Professional default pool
 // No extra model calls; pure string parsing.
@@ -357,73 +368,132 @@ function buildSuggestedFromReply(replyText, wantPersonal, userMessage) {
   return combined.slice(0, 3);
 }
 
-// Scans the first 1200 chars of replyText for lines that look like
-// "I can help/cover/explain ..." offer bullets and converts them to questions.
+// ---------------------------------------------------------------------------
+// extractOfferLines — hardened version
+//
+// Design constraints enforced here:
+//   A) SECTION GATING    — only parse lines that appear AFTER an explicit
+//                           offer-header line.  The header line itself is
+//                           skipped UNLESS it is a complete standalone offer
+//                           (e.g. "I can explain the SAST approach." with no
+//                           following bullets).  Everything before the header
+//                           is ignored.
+//   B) REFUSAL EXCLUSION — drop any line containing pivot/refusal phrases.
+//   C) OFFER-ONLY VALID  — accept a line only if it matches a strict offer
+//                           pattern (action verb present, not a skills fact).
+//   D) CLEANING          — strip scaffolding, preserve natural case, wrap as
+//                           question, clamp to 90 chars.
+//
+// Returns up to 5 cleaned question strings (caller takes first 3).
+// Returns [] when no valid offer section is found → caller uses pickPool.
+// ---------------------------------------------------------------------------
 function extractOfferLines(replyText) {
   const raw = (replyText || "").slice(0, 1200);
+  const lines = raw.split(/\n/);
 
-  // Normalise: if a line contains an inline "For example, I can …" or
-  // "I can explain/cover/help…" fragment (not at the start of the line),
-  // split it out so we capture only the offer clause, not the preamble.
-  const normalized = raw.replace(
-    /[^.\n]*?\b(for example[,: ]+i can [^\n.!?]+)/gi,
-    (_, offer) => "\n" + offer,
-  );
+  // ── A) SECTION GATING ────────────────────────────────────────────────────
+  const OFFER_HEADER_RE = /\b(for example|i can help(?: you)?(?: with)?|i can cover|i can explain|here are a few ways i can help)\b/i;
 
-  const lines = normalized.split(/\n/);
+  let offerSectionStart = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (OFFER_HEADER_RE.test(lines[i])) {
+      offerSectionStart = i;
+      break;
+    }
+  }
+  if (offerSectionStart === -1) return [];
+
+  // ── C) OFFER-ONLY VALIDATION (defined early for use in header check) ──────
+  // C1  Explicit "I can …" with a content-bearing action verb
+  const C1_RE = /\b(?:i can|i can help|i can help with)\b.{0,120}\b(?:explain|cover|discuss|walk(?: through)?|break down|outline|compare|summarize)\b/i;
+  // C2  "discuss Jeremy's experience with …"
+  const C2_RE = /\bdiscuss\b.{0,60}\bjeremy(?:'?s)?\b.{0,60}\bexperience\b.{0,60}\bwith\b/i;
+  // C3  Bullet prefixed with an offer verb (right after bullet marker)
+  const C3_RE = /^[-\u2022*]\s*(?:explain|cover|walk(?: through)?|break down|outline|compare|summarize|discuss)\b/i;
+
+  const isOffer = (line) => C1_RE.test(line) || C2_RE.test(line) || C3_RE.test(line);
+
+  // Decide whether to include the header line as a candidate.
+  // A header line is included only when it IS itself a valid offer AND has
+  // substantial content remaining after stripping the header phrases — i.e. it
+  // is a standalone "I can explain X" sentence, not a "I can help with:" intro.
+  const headerLine = lines[offerSectionStart];
+  const headerIsStandaloneOffer = isOffer(headerLine) && (() => {
+    const stripped = headerLine
+      .replace(/\bi can help(?: you)?(?: with)?[:]?\s*/i, "")
+      .replace(/\bi can cover[:]?\s*/i, "")
+      .replace(/\bi can explain[:]?\s*/i, "")
+      .replace(/\bfor example[,:]?\s*/i, "")
+      .trim();
+    // Must have something meaningful after stripping AND must not end with ":"
+    // (which would indicate it's a list intro, not a standalone offer)
+    return stripped.length > 8 && !/:\s*$/.test(stripped);
+  })();
+
+  const candidateLines = headerIsStandaloneOffer
+    ? lines.slice(offerSectionStart)       // header is also a candidate
+    : lines.slice(offerSectionStart + 1);  // skip header (default)
+
+  // ── B) REFUSAL / PIVOT BLACKLIST ─────────────────────────────────────────
+  const REFUSAL_PHRASES = [
+    "outside jeremy",
+    "outside his core",
+    "not in jeremy",
+    "not within jeremy",
+    "i can tell you about his expertise",
+    "i can tell you about jeremy",
+    "i can\u2019t help with",
+    "i can't help with",
+    "i can\u2019t answer",
+    "i can't answer",
+  ];
+  const isRefusal = (s) => {
+    const lower = s.toLowerCase();
+    return REFUSAL_PHRASES.some(p => lower.includes(p));
+  };
+
+  // ── D) CLEAN + WRAP ───────────────────────────────────────────────────────
+  const STRIP_PREFIXES = [
+    /^[-\u2022*]\s*/,
+    /^for example[,:]?\s*/i,
+    // Strip "I can help (you) with" so "I can help with X" → "X"
+    /^i can help you with[:]?\s*/i,
+    /^i can help with[:]?\s*/i,
+    // Strip only "I can " (not the verb) so "I can explain X" → "explain X"
+    /^i can\s+(?=explain|cover|discuss|walk|break|outline|compare|summarize)/i,
+    // Fallback: strip bare "I can:" prefix
+    /^i can[:]\s*/i,
+  ];
+
+  const cleanLine = (line) => {
+    let s = line.trim();
+    for (const re of STRIP_PREFIXES) s = s.replace(re, "");
+    return s.replace(/^[^a-zA-Z0-9]+/, "").trim();
+  };
+
+  const toQuestion = (cleaned) => {
+    if (!cleaned) return null;
+    if (/\?$/.test(cleaned)) return cleaned;
+    // Lowercase first char so "Can you Explain" → "Can you explain"
+    const lowered = cleaned.charAt(0).toLowerCase() + cleaned.slice(1);
+    return ("Can you " + lowered).replace(/\.?$/, "?");
+  };
+
+  // ── Scan candidate lines ──────────────────────────────────────────────────
   const results = [];
-
-  for (const rawLine of lines) {
+  for (const rawLine of candidateLines) {
     if (results.length >= 5) break;
     const line = rawLine.trim();
     if (!line) continue;
-
-    const lower = line.toLowerCase();
-    const hasBullet = /^[-•*]/.test(line);
-    const hasOffer  = lower.includes("i can help") ||
-                      lower.includes("i can cover") ||
-                      lower.includes("i can explain") ||
-                      lower.includes("i can walk") ||
-                      lower.includes("i can discuss");
-    const hasForExample = lower.includes("for example") && lower.includes("i can");
-
-    if (!hasBullet && !hasOffer && !hasForExample) continue;
-
-    // Strip bullet prefix and common leading phrases
-    let cleaned = line
-      .replace(/^[-•*]\s*/, "")
-      .replace(/^for example[,:]?\s*/i, "")
-      .replace(/^i can help with[:]?\s*/i, "")
-      .replace(/^i can help[:]?\s*/i, "")
-      .replace(/^i can cover[:]?\s*/i, "")
-      .replace(/^i can explain[:]?\s*/i, "")
-      .replace(/^i can walk you through[:]?\s*/i, "")
-      .replace(/^i can discuss[:]?\s*/i, "")
-      .replace(/^i can[:]?\s*/i, "")
-      .trim();
-
+    if (isRefusal(line)) continue;
+    if (!isOffer(line)) continue;
+    const cleaned = cleanLine(line);
     if (!cleaned) continue;
-
-    // Convert to a question if not already one
-    let question;
-    if (/[?]$/.test(cleaned)) {
-      question = cleaned;
-    } else {
-      // Capitalise first letter after stripping any leading punctuation
-      const firstChar = cleaned.replace(/^[^a-zA-Z0-9]+/, "");
-      const capitalised = firstChar.charAt(0).toUpperCase() + firstChar.slice(1);
-      // Clean up double punctuation that can appear if cleaned ends with a period
-      question = ("Can you " + capitalised + "?").replace(/\.\?$/, "?");
-    }
-
-    // Safety-trim to 90 chars
-    if (question.length > 90) {
-      question = question.slice(0, 87).trimEnd() + "…";
-    }
-
+    let question = toQuestion(cleaned);
+    if (!question) continue;
+    if (question.length > 90) question = question.slice(0, 87).trimEnd() + "\u2026";
     results.push(question);
   }
-
   return results;
 }
 
