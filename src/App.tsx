@@ -190,7 +190,7 @@ const AIConcierge = () => {
       {isOpen && (
         <div ref={panelRef} className="fixed bottom-4 right-4 left-4 md:left-auto md:bottom-8 md:right-8 z-50 md:w-96 h-[70vh] md:h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl overflow-hidden text-white">
           <div className="p-4 border-b border-champagne/20 flex justify-between items-center bg-white/5">
-            <h3 className="font-semibold text-champagne">Jeremy's AI</h3>
+            <h3 className="font-semibold text-champagne">Ask Jeremy's Ai</h3>
             <button onClick={() => setIsOpen(false)}><X className="w-5 h-5" /></button>
           </div>
 
