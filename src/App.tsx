@@ -8,35 +8,22 @@ gsap.registerPlugin(ScrollTrigger)
 
 // --- SUB-COMPONENTS ---
 
-const TypewriterMessage = ({ 
-  text, 
-  containerRef 
-}: { 
-  text: string; 
-  containerRef?: React.RefObject<HTMLDivElement> 
-}) => {
+const TypewriterMessage = ({ text, containerRef }: { text: string; containerRef?: React.RefObject<HTMLDivElement | null> }) => {
   const [displayedText, setDisplayedText] = useState("");
-  
+
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
+      setDisplayedText(text.slice(0, i + 1));
       i++;
-      const currentText = text.slice(0, i);
-      setDisplayedText(currentText);
 
       if (containerRef?.current) {
-        requestAnimationFrame(() => {
-          if (containerRef.current) {
-            containerRef.current.scrollTop = containerRef.current.scrollHeight;
-          }
-        });
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
       }
 
-      if (i >= text.length) {
-        clearInterval(interval);
-      }
+      if (i >= text.length) clearInterval(interval);
     }, 15);
-    
+
     return () => clearInterval(interval);
   }, [text, containerRef]);
 
@@ -93,7 +80,6 @@ const Hero = () => {
 }
 
 // ... [Features, Philosophy, Protocol, CTA, Footer go here - keeping them as per your original code] ...
-
 const AIConcierge = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
@@ -103,10 +89,24 @@ const AIConcierge = () => {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Updated Scroll Logic for React 19
+  useEffect(() => {
+    if (scrollRef.current) {
+      const scrollContainer = scrollRef.current;
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [messages, loading]);
+
   const sendMessage = async (text: string) => {
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+    if (!text.trim()) return;
+    const userMsg = { role: 'user' as const, content: text };
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -116,7 +116,7 @@ const AIConcierge = () => {
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Assistant offline. Please email jeremy@quadri.fit" }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Error: Could not reach agent." }]);
     } finally {
       setLoading(false);
     }
@@ -125,33 +125,47 @@ const AIConcierge = () => {
   return (
     <>
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 magnetic-btn glass border border-champagne/30 rounded-full p-5 shadow-2xl text-champagne">
+        <button onClick={() => setIsOpen(true)} className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 glass border border-champagne/30 rounded-full p-5 text-champagne shadow-2xl">
           <MessageSquare className="w-6 h-6" />
         </button>
       )}
+
       {isOpen && (
-        <div ref={panelRef} className="fixed bottom-4 right-4 left-4 md:left-auto md:bottom-8 md:right-8 z-50 md:w-96 h-[75vh] md:h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl overflow-hidden">
-          <div className="p-6 border-b border-champagne/20 flex justify-between items-center bg-white/5 backdrop-blur-md">
-            <h3 className="font-semibold text-champagne">Ask Jeremy's AI</h3>
+        <div ref={panelRef} className="fixed bottom-4 right-4 left-4 md:left-auto md:bottom-8 md:right-8 z-50 md:w-96 h-[70vh] md:h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl overflow-hidden text-white">
+          <div className="p-4 border-b border-champagne/20 flex justify-between items-center bg-white/5">
+            <h3 className="font-semibold text-champagne">Jeremy's AI</h3>
             <button onClick={() => setIsOpen(false)}><X className="w-5 h-5" /></button>
           </div>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`p-4 rounded-2xl max-w-[85%] ${msg.role === 'user' ? 'bg-champagne text-obsidian ml-auto rounded-tr-none' : 'bg-white/5 border border-white/10 mr-auto rounded-tl-none'}`}>
-                {idx === messages.length - 1 && msg.role === 'assistant' ? <TypewriterMessage text={msg.content} containerRef={scrollRef} /> : <p className="text-sm whitespace-pre-wrap">{msg.content}</p>}
-              </div>
-            ))}
-            {loading && <div className="text-xs text-champagne/60 italic p-2"><Brain className="inline w-3 h-3 animate-spin mr-2" />Analyzing...</div>}
+
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            {messages.map((msg, idx) => {
+              const isLast = idx === messages.length - 1 && msg.role === 'assistant';
+              return (
+                <div key={idx} className={`p-3 rounded-xl max-w-[90%] ${msg.role === 'user' ? 'bg-champagne text-obsidian ml-auto' : 'bg-white/10 mr-auto'}`}>
+                  {isLast ? <TypewriterMessage text={msg.content} containerRef={scrollRef} /> : <p className="text-sm whitespace-pre-wrap">{msg.content}</p>}
+                </div>
+              );
+            })}
+            {loading && <div className="text-xs text-champagne/50 animate-pulse">Thinking...</div>}
           </div>
+
           <div className="p-4 bg-white/5 border-t border-champagne/20 flex gap-2">
-            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendMessage(input)} placeholder="Type..." className="flex-1 bg-obsidian/50 border border-white/10 rounded-full px-4 py-2 outline-none" />
-            <button onClick={() => sendMessage(input)} className="bg-champagne text-obsidian rounded-full p-3"><Send className="w-4 h-4" /></button>
+            <input 
+              className="flex-1 bg-obsidian/50 border border-white/10 rounded-full px-4 py-2 text-sm outline-none"
+              value={input} 
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
+              placeholder="Ask me anything..."
+            />
+            <button onClick={() => sendMessage(input)} className="bg-champagne text-obsidian rounded-full p-2">
+              <Send className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
 const App = () => (
   <div className="relative">
