@@ -1,4 +1,42 @@
-// Ask about Jeremy's work Component
+// 1. Typewriter Component (Place this above AIConcierge)
+const TypewriterMessage = ({ 
+  text, 
+  containerRef 
+}: { 
+  text: string; 
+  containerRef?: React.RefObject<HTMLDivElement> 
+}) => {
+  const [displayedText, setDisplayedText] = useState("");
+  
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      const currentText = text.slice(0, i);
+      setDisplayedText(currentText);
+
+      // Force scroll to bottom after the text is painted in the DOM
+      if (containerRef?.current) {
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+          }
+        });
+      }
+
+      if (i >= text.length) {
+        clearInterval(interval);
+      }
+    }, 15);
+    
+    return () => clearInterval(interval);
+  }, [text, containerRef]);
+
+  // whitespace-pre-wrap is critical for lists and newlines to expand the bubble correctly
+  return <p className="text-sm leading-relaxed whitespace-pre-wrap">{displayedText}</p>;
+};
+
+// 2. Updated AIConcierge Component
 const AIConcierge = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
@@ -16,6 +54,7 @@ const AIConcierge = () => {
     "What's your experience with SAST/DAST integration?"
   ];
 
+  // GSAP Entrance
   useGSAP(() => {
     if (isOpen) {
       gsap.fromTo(panelRef.current, 
@@ -25,6 +64,7 @@ const AIConcierge = () => {
     }
   }, [isOpen]);
 
+  // Initial scroll when a new message starts
   useEffect(() => {
     if (scrollRef.current) {
       const timeoutId = setTimeout(() => {
@@ -42,7 +82,6 @@ const AIConcierge = () => {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
-    setOffline(false);
     
     try {
       const res = await fetch('/api/chat', {
@@ -54,7 +93,6 @@ const AIConcierge = () => {
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (e) {
-      setOffline(true);
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: "Assistant is offline. Please email jeremy@quadri.fit directly."
@@ -69,7 +107,7 @@ const AIConcierge = () => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 magnetic-btn glass border border-champagne/30 rounded-full p-5 hover:border-champagne/60 transition-all shadow-2xl"
+          className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 magnetic-btn glass border border-champagne/30 rounded-full p-5 shadow-2xl"
         >
           <div className="relative">
             <MessageSquare className="w-6 h-6 text-champagne" />
@@ -128,7 +166,7 @@ const AIConcierge = () => {
                   {isLastAssistantMessage ? (
                     <TypewriterMessage text={msg.content} containerRef={scrollRef} />
                   ) : (
-                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   )}
                 </div>
               );
@@ -142,7 +180,7 @@ const AIConcierge = () => {
             )}
           </div>
           
-          {/* Input - NOW PROPERLY OUTSIDE THE MESSAGES LOOP */}
+          {/* Input */}
           <div className="p-4 bg-white/5 border-t border-champagne/20">
             <div className="flex gap-2">
               <input
@@ -168,3 +206,21 @@ const AIConcierge = () => {
     </>
   );
 };
+
+// 3. Final App Export
+const App = () => {
+  return (
+    <div className="relative">
+      <Navbar />
+      <Hero />
+      <Features />
+      <Philosophy />
+      <Protocol />
+      <CTA />
+      <Footer />
+      <AIConcierge />
+    </div>
+  )
+}
+
+export default App
