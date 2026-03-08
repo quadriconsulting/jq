@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 export async function onRequest({ request, next }) {
   const url = new URL(request.url);
   if (!['GET', 'HEAD'].includes(request.method)) return next();

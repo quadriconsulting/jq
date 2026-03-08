@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [

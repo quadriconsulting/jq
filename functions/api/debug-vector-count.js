@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 export async function onRequestGet({ env }) {
   // Query with any vector (use a fixed embedding)
   const emb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: ["test"] });

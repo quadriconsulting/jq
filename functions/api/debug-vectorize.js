@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 // functions/api/debug-vectorize.js
 
 export async function onRequestGet({ env }) {

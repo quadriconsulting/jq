@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 import { Hono } from 'hono'
 
 const app = new Hono()

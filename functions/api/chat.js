@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 // functions/api/chat.js
 
 // Reply length policy

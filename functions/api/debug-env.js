@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 export async function onRequestGet({ env }) {
   return Response.json({
     hasAI: !!env.AI,

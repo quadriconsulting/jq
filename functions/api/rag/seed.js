@@ -1,3 +1,4 @@
+// Author: Jeremy Quadri
 // functions/api/rag/seed.js
 
 export async function onRequestPost({ request, env }) {

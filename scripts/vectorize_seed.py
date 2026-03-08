@@ -1,3 +1,4 @@
+# Author: Jeremy Quadri
 import os
 import re
 import json
