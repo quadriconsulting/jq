@@ -651,14 +651,15 @@ useEffect(() => {
                     : 'bg-white/5 border border-white/10 mr-auto rounded-tl-none'
                }`}
              >
-               {isLastAssistantMessage ? (
-                 <TypewriterMessage text={msg.content} />
-               ) : (
-                 <p className="text-sm leading-relaxed">{msg.content}</p>
-               )}
-             </div>
-          );
-        })}
+            {/* Inside your messages.map loop in AIConcierge */}
+            {isLastAssistantMessage ? (
+              <TypewriterMessage 
+                text={msg.content} 
+                containerRef={scrollRef} // Pass the ref here
+              />
+        ) : (
+          <p className="text-sm leading-relaxed">{msg.content}</p>
+        )}
             
             {loading && (
               <div className="flex items-center gap-2 p-4 text-xs text-champagne/60 italic">
