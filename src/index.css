@@ -31,6 +31,20 @@ body::before {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-champagne to-yellow-200;
   }
+
+/* --- ADD THIS AT THE BOTTOM --- */
+/* Premium Thin Scrollbar for the Chat */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #f7e7ce; /* Champagne color */
+  border-radius: 10px;
+}  
+
   
   .glass {
     background: rgba(13, 13, 18, 0.85);
