@@ -242,8 +242,10 @@ ${message}
 Retrieved context:
 ${ctx || "(no matches returned)"}
 
-Answer the user using retrieved context as the primary source for Jeremy-specific questions. For broader questions within Jeremy's professional domains, answer with anchored professional guidance consistent with Jeremy's approach. Do not invent Jeremy-specific facts. Do not use mechanical retrieval language.
-IMPORTANT: Be extremely brief. Answer in exactly ONE short sentence. If you include "For example, I can help with:", put it immediately after that sentence using literal hyphen bullets (- ) so it is not cut off by the hard character limit.
+Answer the user using the retrieved context. 
+CRITICAL: Respond ONLY in the language the user used (e.g., Arabic if asked in Arabic, Spanish if asked in Spanish).
+STRICT BREVITY: One short sentence only. 
+If offering help, put "For example, I can help with:" (translated) on a new line with hyphen bullets (-).
 `.trim();
 
   const rawReply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
@@ -282,12 +284,12 @@ async function callOpenAI(apiKey, system, user, debugMode = false) {
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: "gpt-4o-mini",  // Use gpt-4o for max intelligence or gpt-4o-mini for speed
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        temperature: 0.2,
+        temperature: 0.1,  // Lower temperature is better for strict instruction following
         max_tokens: 220,
       }),
     });
