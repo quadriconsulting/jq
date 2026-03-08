@@ -619,7 +619,6 @@ const AIConcierge = () => {
                 ))}
               </div>
             )}
-            // ====
 
             {messages.map((msg, idx) => {
               const isLastAssistantMessage = idx === messages.length - 1 && msg.role === 'assistant';
