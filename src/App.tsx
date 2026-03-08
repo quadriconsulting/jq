@@ -481,23 +481,34 @@ const Footer = () => {
   )
 }
 
-const TypewriterMessage = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
+const TypewriterMessage = ({ 
+  text, 
+  containerRef 
+}: { 
+  text: string; 
+  containerRef?: React.RefObject<HTMLDivElement> 
+}) => {
   const [displayedText, setDisplayedText] = useState("");
   
   useEffect(() => {
     let i = 0;
-    // Speed: lower is faster. 15-20ms feels natural.
     const interval = setInterval(() => {
-      setDisplayedText(text.slice(0, i));
+      const currentText = text.slice(0, i);
+      setDisplayedText(currentText);
       i++;
+
+      // Push scroll down as height changes
+      if (containerRef?.current) {
+        containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      }
+
       if (i > text.length) {
         clearInterval(interval);
-        if (onComplete) onComplete();
       }
     }, 15);
     
     return () => clearInterval(interval);
-  }, [text]);
+  }, [text, containerRef]);
 
   return <p className="text-sm leading-relaxed">{displayedText}</p>;
 };
