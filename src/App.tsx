@@ -481,6 +481,27 @@ const Footer = () => {
   )
 }
 
+const TypewriterMessage = ({ text, onComplete }: { text: string; onComplete?: () => void }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  
+  useEffect(() => {
+    let i = 0;
+    // Speed: lower is faster. 15-20ms feels natural.
+    const interval = setInterval(() => {
+      setDisplayedText(text.slice(0, i));
+      i++;
+      if (i > text.length) {
+        clearInterval(interval);
+        if (onComplete) onComplete();
+      }
+    }, 15);
+    
+    return () => clearInterval(interval);
+  }, [text]);
+
+  return <p className="text-sm leading-relaxed">{displayedText}</p>;
+};
+
 // Ask about Jeremy's work Component
 const AIConcierge = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -598,19 +619,28 @@ const AIConcierge = () => {
                 ))}
               </div>
             )}
-            
-            {messages.map((msg, idx) => (
-              <div 
+            // ====
+
+            {messages.map((msg, idx) => {
+              const isLastAssistantMessage = idx === messages.length - 1 && msg.role === 'assistant';
+
+             return (
+               <div 
                 key={idx}
-                className={`p-4 rounded-2xl max-w-[85%] ${
+                className={`p-4 rounded-2xl max-w-[85%] animate-in fade-in slide-in-from-bottom-2 duration-300 ${
                   msg.role === 'user' 
                     ? 'bg-champagne text-obsidian ml-auto rounded-tr-none shadow-lg' 
                     : 'bg-white/5 border border-white/10 mr-auto rounded-tl-none'
-                }`}
-              >
-                <p className="text-sm leading-relaxed">{msg.content}</p>
-              </div>
-            ))}
+               }`}
+             >
+               {isLastAssistantMessage ? (
+                 <TypewriterMessage text={msg.content} />
+               ) : (
+                 <p className="text-sm leading-relaxed">{msg.content}</p>
+               )}
+             </div>
+          );
+        })}
             
             {loading && (
               <div className="flex items-center gap-2 p-4 text-xs text-champagne/60 italic">
