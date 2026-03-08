@@ -75,7 +75,7 @@ Security-driven IT consulting and management professional with ~20 years’ expe
 
 ### Deutsche Bank (Frankfurt, Germany) — IT Security Consultant (Product Owner / Scrum)  
 **Nov 2016 – Jul 2019**
-- Product owner for multiple security initiatives; coordinate a geographically dispersed team of ~25 (India, London, Frankfurt, Singapore).
+- Product owner for multiple security initiatives; coordinate a remotely dispersed team of ~25 (India, London, Frankfurt, Singapore).
 - Focus areas: data encryption (in transit/at rest), audits, risk mitigation, cryptographic key & certificate management.
 - Lead requirements assessment, research, solution design, documentation, troubleshooting, migrations, and updates.
 - Establish PoC/test labs to validate approaches in virtualized environments.
