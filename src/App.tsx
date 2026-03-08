@@ -79,7 +79,61 @@ const Hero = () => {
   )
 }
 
-// ... [Features, Philosophy, Protocol, CTA, Footer go here - keeping them as per your original code] ...
+const Features = () => {
+  const features = [
+    { icon: <Shield className="w-12 h-12" />, title: "AppSec Architecture", description: "Design of secure SDLC programs across SAST, SCA, and DAST embedded in CI/CD." },
+    { icon: <Brain className="w-12 h-12" />, title: "Risk Intelligence", description: "Multi-source vulnerability intelligence pipelines using EPSS, KEV, and CVSS." },
+    { icon: <Lock className="w-12 h-12" />, title: "Cloud Security", description: "Implementing Zero Trust principles and structured telemetry across cloud environments." },
+    { icon: <Brain className="w-12 h-12" />, title: "Security Automation", description: "AI-assisted remediation workflows with deterministic validation gates." }
+  ]
+  return (
+    <section id="services" className="py-32 px-6 bg-obsidianLight">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        {features.map((f, i) => (
+          <div key={i} className="glass p-10 rounded-2xl border-2 border-champagne/30">
+            <div className="text-champagne mb-6">{f.icon}</div>
+            <h3 className="text-2xl font-semibold mb-4 text-white">{f.title}</h3>
+            <p className="text-gray-300">{f.description}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+const Philosophy = () => (
+  <section id="philosophy" className="py-40 px-6 text-center bg-obsidian">
+    <h2 className="text-4xl md:text-6xl font-serif font-bold text-champagne">Beyond compliance. I build risk-intelligent systems.</h2>
+  </section>
+)
+
+const Protocol = () => (
+  <section className="py-32 px-6 bg-obsidian">
+    <div className="max-w-4xl mx-auto space-y-20">
+      <h2 className="text-5xl font-serif font-bold text-center text-gradient">Engagement Protocol</h2>
+      <div className="glass p-10 rounded-3xl border border-champagne/20">
+        <h3 className="text-3xl font-semibold mb-4">01. Threat Mapping</h3>
+        <p className="text-gray-400">Analysis of the landscape using NVD, EPSS, and KEV correlation.</p>
+      </div>
+    </div>
+  </section>
+)
+
+const CTA = () => (
+  <section id="contact" className="py-40 px-6 bg-obsidianLight text-center">
+    <h2 className="text-5xl font-serif font-bold mb-8">Let's Build Something <span className="text-champagne">Unbreakable</span></h2>
+    <a href="mailto:jeremy@quadri.fit" className="inline-flex items-center gap-3 bg-champagne text-obsidian px-12 py-6 rounded-full font-semibold">
+      <Mail className="w-5 h-5" /> jeremy@quadri.fit
+    </a>
+  </section>
+)
+
+const Footer = () => (
+  <footer className="bg-obsidian py-16 px-6 text-center border-t border-gray-800">
+    <p className="text-gray-500">© 2026 Jeremy Quadri. All rights reserved.</p>
+  </footer>
+)
+
 const AIConcierge = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
@@ -89,12 +143,17 @@ const AIConcierge = () => {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Updated Scroll Logic for React 19
+  const suggestedQuestions = [
+    "How do you integrate NVD/EPSS/KEV into risk scoring?",
+    "What AI techniques do you use for security automation?",
+    "How do you approach Zero Trust architecture?",
+    "What's your experience with SAST/DAST integration?"
+  ];
+
   useEffect(() => {
     if (scrollRef.current) {
-      const scrollContainer = scrollRef.current;
-      scrollContainer.scrollTo({
-        top: scrollContainer.scrollHeight,
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
         behavior: 'smooth'
       });
     }
@@ -102,11 +161,9 @@ const AIConcierge = () => {
 
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
-    const userMsg = { role: 'user' as const, content: text };
-    setMessages(prev => [...prev, userMsg]);
+    setMessages(prev => [...prev, { role: 'user', content: text }]);
     setInput('');
     setLoading(true);
-
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
@@ -116,7 +173,7 @@ const AIConcierge = () => {
       const data = await res.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Error: Could not reach agent." }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: "Assistant offline. Please email jeremy@quadri.fit" }]);
     } finally {
       setLoading(false);
     }
@@ -138,15 +195,25 @@ const AIConcierge = () => {
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            {messages.length === 0 && (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-400">Suggested questions:</p>
+                {suggestedQuestions.map((q, i) => (
+                  <button key={i} onClick={() => sendMessage(q)} className="w-full text-left text-sm p-3 rounded-xl border border-white/10 hover:border-champagne/50 hover:bg-champagne/5 transition-all">
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
             {messages.map((msg, idx) => {
               const isLast = idx === messages.length - 1 && msg.role === 'assistant';
               return (
-                <div key={idx} className={`p-3 rounded-xl max-w-[90%] ${msg.role === 'user' ? 'bg-champagne text-obsidian ml-auto' : 'bg-white/10 mr-auto'}`}>
+                <div key={idx} className={`p-3 rounded-xl max-w-[90%] ${msg.role === 'user' ? 'bg-champagne text-obsidian ml-auto rounded-tr-none' : 'bg-white/10 mr-auto rounded-tl-none'}`}>
                   {isLast ? <TypewriterMessage text={msg.content} containerRef={scrollRef} /> : <p className="text-sm whitespace-pre-wrap">{msg.content}</p>}
                 </div>
               );
             })}
-            {loading && <div className="text-xs text-champagne/50 animate-pulse">Thinking...</div>}
+            {loading && <div className="text-xs text-champagne/50 animate-pulse">Analyzing security documentation...</div>}
           </div>
 
           <div className="p-4 bg-white/5 border-t border-champagne/20 flex gap-2">
@@ -155,11 +222,9 @@ const AIConcierge = () => {
               value={input} 
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage(input)}
-              placeholder="Ask me anything..."
+              placeholder="Ask a question..."
             />
-            <button onClick={() => sendMessage(input)} className="bg-champagne text-obsidian rounded-full p-2">
-              <Send className="w-4 h-4" />
-            </button>
+            <button onClick={() => sendMessage(input)} className="bg-champagne text-obsidian rounded-full p-2"><Send className="w-4 h-4" /></button>
           </div>
         </div>
       )}
@@ -171,7 +236,11 @@ const App = () => (
   <div className="relative">
     <Navbar />
     <Hero />
-    {/* Add Features, Philosophy etc components here */}
+    <Features />
+    <Philosophy />
+    <Protocol />
+    <CTA />
+    <Footer />
     <AIConcierge />
   </div>
 )
