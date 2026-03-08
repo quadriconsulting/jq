@@ -604,7 +604,8 @@ const AIConcierge = () => {
           </div>
           
           {/* Messages Container with Auto-Scroll Ref */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
+      //  <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth custom-scrollbar">
             {messages.length === 0 && (
               <div className="space-y-3">
                 <p className="text-sm text-gray-400 mb-4">How can I help you today?</p>
