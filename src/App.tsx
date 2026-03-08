@@ -529,11 +529,13 @@ const AIConcierge = () => {
   
   return (
     <>
+
+      
       {/* Floating Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 z-50 magnetic-btn glass border border-champagne/30 rounded-full p-5 hover:border-champagne/60 transition-all shadow-2xl"
+          className="fixed bottom-4 right-4 md:bottom-8 md:right-8 z-50 magnetic-btn glass border border-champagne/30 rounded-full p-5 hover:border-champagne/60 transition-all shadow-2xl"
         >
           <MessageSquare className="w-6 h-6 text-champagne" />
         </button>
@@ -541,7 +543,8 @@ const AIConcierge = () => {
       
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-8 right-8 z-50 w-96 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl">
+        // <div className="fixed bottom-8 right-8 z-50 w-96 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl">
+        <div className="fixed bottom-4 right-4 left-4 md:left-auto md:bottom-8 md:right-8 z-50 md:w-96 h-[80vh] md:h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl">
           {/* Header */}
           <div className="p-6 border-b border-champagne/20 flex justify-between items-center">
             <div>
