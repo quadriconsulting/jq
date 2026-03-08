@@ -532,14 +532,21 @@ const AIConcierge = () => {
   }, [isOpen]);
 
   // 2. Auto-scroll to bottom when messages update
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
+// Inside App.tsx -> AIConcierge component
+useEffect(() => {
+  if (scrollRef.current) {
+    // This timeout ensures the height calculation includes the newest message bubble
+    const timeoutId = setTimeout(() => {
+      scrollRef.current?.scrollTo({
         top: scrollRef.current.scrollHeight,
         behavior: 'smooth'
       });
-    }
-  }, [messages, loading]);
+    }, 100); 
+
+    return () => clearTimeout(timeoutId);
+  }
+}, [messages, loading]);
+  
 
   const sendMessage = async (text: string) => {
     const userMessage = { role: 'user' as const, content: text };
@@ -604,7 +611,7 @@ const AIConcierge = () => {
           </div>
           
           {/* Messages Container with Auto-Scroll Ref */}
-      //  <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
+      
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth custom-scrollbar">
             {messages.length === 0 && (
               <div className="space-y-3">
