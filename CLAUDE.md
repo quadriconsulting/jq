@@ -63,3 +63,22 @@ interface ChatResponse {
     content: string;
   };
 }
+```
+
+## V2 Production Launch & UX Polish
+
+### Frontend & UI Polish
+- Built a "sublime", Apple-quality UI for the AI Concierge using glassmorphism, backdrop-blur, and an AI avatar (Sparkles icon).
+- Fixed mobile clipping by implementing strict responsive container bounds (`left-4 right-4 sm:left-auto sm:w-96`) and responsive padding (`px-4 sm:px-6`).
+- Implemented robust React auto-scrolling (`messagesEndRef` with `h-4 shrink-0` sentinel) to keep the newest messages in view.
+- Engineered a custom CSS keyframe animation (`glassPushWipe`) that uses `clip-path` and `filter: blur()` to create a dramatic, premium entrance transition for the chat window and message bubbles.
+
+### Backend & AI Logic
+- Bulletproofed the OpenAI JSON response parser in the Cloudflare Worker to safely strip Markdown fences (` ```json ``` `), ensuring Action Buttons (CV download, Calendar link) render 100% of the time.
+- Implemented a strict "Language Mirroring" mandate as the first token of the system prompt, forcing the AI to dynamically detect the user's language (e.g., Spanish) and reply in kind, overriding the English RAG context.
+
+### DevOps & Deployment
+- Successfully resolved Git merge conflicts (`wrangler.json`) between the preview branch and the main branch, keeping `"name": "jq"`.
+- Mastered the Cloudflare Pages CI/CD pipeline, correctly configuring production branch tracking.
+- Utilized `git commit --allow-empty` to manually trigger Cloudflare webhooks and force a production deployment without altering code.
+- Successfully merged and deployed the complete V2 architecture to the live `main` production environment.
