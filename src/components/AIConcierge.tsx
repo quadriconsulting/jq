@@ -115,7 +115,7 @@ const AIConcierge = () => {
 
       {/* Chat Panel */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 left-4 sm:bottom-8 sm:right-8 sm:left-auto sm:w-96 z-50 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl">
+              <div className="fixed bottom-4 right-4 left-4 sm:bottom-8 sm:right-8 sm:left-auto sm:w-96 z-50 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl animate-sublime-pop origin-bottom-right">
           {/* Header */}
           <div className="p-6 border-b border-champagne/20 flex justify-between items-center bg-obsidian/80 backdrop-blur-xl rounded-t-3xl">
             <div>
