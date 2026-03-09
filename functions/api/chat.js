@@ -14,6 +14,7 @@ export async function onRequestPost({ request, env }) {
 
   const body = await safeJson(request);
   const message = (body?.message || "").toString().slice(0, 4000).trim();
+  const uuid = (body?.uuid || "").toString().slice(0, 64).trim();
 
   if (!message) {
     return Response.json({ reply: "Ask me a question and I'll help." }, { status: 400 });
@@ -234,6 +235,20 @@ CRITICAL FINAL DIRECTIVE
 - World-fact question (politics / history / geography) → ONE pivot sentence + offer list immediately. Do NOT answer the fact. Stop.
 - Translation request → output ONLY the translated string. Nothing else.
 - Violating these two constraints is a system failure.
+
+JSON OUTPUT CONTRACT
+- You MUST respond with a valid JSON object containing at minimum a "reply" string.
+- Do NOT wrap JSON in markdown code fences. Output raw JSON only.
+- Optionally include "action" — set to exactly one of:
+    "SHOW_CALENDAR"  → user wants to schedule, book time, architecture review, discuss engagement, hire, connect
+    "SHOW_CV"        → user asks for CV, resume, work history, download
+    "RENDER_SVG"     → user asks for architecture diagram, flowchart, system diagram, visual
+    "RENDER_CODE"    → user asks for code, snippet, implementation example, show me how
+- When action is "RENDER_CODE", also include "codeSnippet": { "language": "<lang>", "content": "<code>" }.
+- Do NOT include "suggested" — it is built server-side.
+- TRANSLATION EXCEPTION: if the translation rule applies, you may output the translated string as the value of "reply".
+- Example standard: {"reply":"Jeremy builds risk scores from EPSS, CVSS and KEV signals."}
+- Example with action: {"reply":"Happy to book time — use the link below.","action":"SHOW_CALENDAR"}
 `.trim();
 
   const user = `
@@ -245,18 +260,22 @@ ${ctx || "(no matches returned)"}
 
 Answer the user using retrieved context as the primary source for Jeremy-specific questions. For broader questions within Jeremy's professional domains, answer with anchored professional guidance consistent with Jeremy's approach. Do not invent Jeremy-specific facts. Do not use mechanical retrieval language.
 IMPORTANT: Be extremely brief. Answer in exactly ONE short sentence. If you include "For example, I can help with:", put it immediately after that sentence using literal hyphen bullets (- ) so it is not cut off by the hard character limit.
+Respond with a valid JSON object. At minimum include a "reply" string.
 `.trim();
 
   const rawReply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
 
   // 7) Hard char cap — bypass when user explicitly wants detail
+  const { reply: rawReplyText, action, codeSnippet } = rawReply;
   const reply = wantsDetail(message)
-    ? rawReply.trim()
-    : capReply(rawReply, HARD_CHAR_CAP);
+    ? rawReplyText.trim()
+    : capReply(rawReplyText, HARD_CHAR_CAP);
 
   return Response.json({
     reply,
     suggested: buildSuggestedFromReply(reply, wantPersonal, message),
+    action,
+    codeSnippet,
   });
 }
 
@@ -268,7 +287,7 @@ function normalizeMatches(res) {
 }
 
 async function callOpenAI(apiKey, system, user, debugMode = false) {
-  if (!apiKey) return "OpenAI API key missing on server.";
+  if (!apiKey) return { reply: "OpenAI API key missing on server." };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 12_000);
@@ -289,28 +308,37 @@ async function callOpenAI(apiKey, system, user, debugMode = false) {
           { role: "user", content: user },
         ],
         temperature: 0.2,
-        max_tokens: 220,
+        max_tokens: 400,
+        response_format: { type: "json_object" },
       }),
     });
   } catch (e) {
     clearTimeout(timer);
     const isTimeout = e?.name === "AbortError";
-    return isTimeout
-      ? "The assistant took too long to respond. Please try again."
-      : "Unable to reach the assistant. Please try again.";
+    return {
+      reply: isTimeout
+        ? "The assistant took too long to respond. Please try again."
+        : "Unable to reach the assistant. Please try again.",
+    };
   }
   clearTimeout(timer);
 
   if (!resp.ok) {
     if (debugMode) {
       const bodyText = await safeText(resp);
-      return `Service error (openaiStatus=${resp.status}): ${truncate(bodyText, 300)}`;
+      return { reply: `Service error (openaiStatus=${resp.status}): ${truncate(bodyText, 300)}` };
     }
-    return "The assistant is temporarily unavailable. Please try again.";
+    return { reply: "The assistant is temporarily unavailable. Please try again." };
   }
 
   const data = await resp.json();
-  return data?.choices?.[0]?.message?.content?.trim() || "No response.";
+  const rawContent = data?.choices?.[0]?.message?.content?.trim();
+  if (!rawContent) return { reply: "No response." };
+  try {
+    return JSON.parse(rawContent);
+  } catch {
+    return { reply: rawContent };
+  }
 }
 
 function isExplicitPersonalIntent(q) {
