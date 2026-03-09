@@ -112,7 +112,7 @@ const AIConcierge = () => {
 
       {/* Chat Panel */}
       {isOpen && (
-              <div className="fixed bottom-4 right-4 left-4 sm:bottom-8 sm:right-8 sm:left-auto sm:w-96 z-50 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl animate-sublime-push origin-bottom-right">
+              <div className="fixed bottom-4 right-4 left-4 sm:bottom-8 sm:right-8 sm:left-auto sm:w-96 z-50 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl animate-glass-push origin-bottom-right">
           {/* Header */}
           <div className="p-6 border-b border-champagne/20 flex justify-between items-center bg-obsidian/80 backdrop-blur-xl rounded-t-3xl">
             <div>
@@ -150,8 +150,8 @@ const AIConcierge = () => {
               <div
                 key={idx}
                 className={msg.role === 'user'
-                  ? 'ml-8 animate-sublime-push'
-                  : 'flex items-start gap-2 mr-4 animate-sublime-push'}
+                  ? 'ml-8 animate-glass-push'
+                  : 'flex items-start gap-2 mr-4 animate-glass-push'}
               >
                 {msg.role === 'assistant' && (
                   <div className="flex-shrink-0 w-6 h-6 rounded-full bg-obsidianLight border border-champagne/20 flex items-center justify-center mt-1">
