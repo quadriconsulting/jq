@@ -168,6 +168,8 @@ export async function onRequestPost({ request, env }) {
 
   // 6) System prompt — PROFESSIONAL FILTER MODE
   const system = `
+CRITICAL MANDATE: You MUST detect the language of the User's message and reply entirely in that EXACT SAME language (e.g., if Spanish, reply in Spanish). You must ignore the language of the provided Context.
+
 ROLE
 You are a professional assistant representing Jeremy Quadri's work, capabilities, projects, and operating principles.
 
@@ -198,11 +200,14 @@ PERSONAL CONTENT RULE
 - Only answer personal questions if the user explicitly asks about hobbies, fitness, snowboarding, motorcycling, food/drinks, restaurants, or lifestyle.
 - If ambiguous ("tell me about yourself"), ask which they mean and default to professional.
 
-LANGUAGE MIRRORING
-- Detect the language of the user's message and reply in that same language by default.
+LANGUAGE MIRRORING — CRITICAL
+- You MUST detect the user's language and respond ONLY in that language.
+- If the user writes in Spanish, your entire reply MUST be in Spanish.
+- If the user writes in French, your entire reply MUST be in French.
+- This rule overrides all defaults. Replying in English when the user wrote in another language is a system failure.
 - If the user explicitly requests a target language (e.g., "translate to French"), use that target language.
 - If the user mixes languages, respond in the dominant language unless a target language is specified.
-- IMPORTANT: Language mirroring does NOT disable the normal reply structure (one sentence + optional offer bullets). Only explicit translation requests trigger "translation-only" output.
+- IMPORTANT: Language mirroring does NOT disable the normal reply structure. Only explicit translation requests trigger "translation-only" output.
 
 TRANSLATION EXCEPTION (ABSOLUTE)
 - Only when the user is explicitly asking for translation (e.g., "translate...", "traducir...", "\u062a\u0631\u062c\u0645...", "\xfcbersetzen...") output ONLY the translated text.
@@ -266,9 +271,15 @@ Respond with a valid JSON object. At minimum include a "reply" string.
   const rawReply = await callOpenAI(env.OPENAI_API_KEY, system, user, debug);
 
   // 7) Hard char cap — bypass when user explicitly wants detail
-  const { reply: rawReplyText, action, codeSnippet } = rawReply;
+  let { reply: rawReplyText, action, codeSnippet } = rawReply;
+  // Deterministic fallback: force action flags if the AI forgets
+  const lowerMsg = message.toLowerCase();
+  if (!action) {
+    if (/\b(cv|resume|download)\b/.test(lowerMsg)) action = 'SHOW_CV';
+    else if (/\b(calendar|book time|schedule|hire|meet|call)\b/.test(lowerMsg)) action = 'SHOW_CALENDAR';
+  }
   const reply = wantsDetail(message)
-    ? rawReplyText.trim()
+    ? (rawReplyText || '').trim()
     : capReply(rawReplyText, HARD_CHAR_CAP);
 
   return Response.json({
@@ -332,12 +343,14 @@ async function callOpenAI(apiKey, system, user, debugMode = false) {
   }
 
   const data = await resp.json();
-  const rawContent = data?.choices?.[0]?.message?.content?.trim();
-  if (!rawContent) return { reply: "No response." };
+  const content = data?.choices?.[0]?.message?.content?.trim();
+  if (!content) return { reply: "No response." };
+  let clean = content.trim();
+  clean = clean.replace(/^```json\s*/i, '').replace(/\s*```$/, '').trim();
   try {
-    return JSON.parse(rawContent);
-  } catch {
-    return { reply: rawContent };
+    return JSON.parse(clean);
+  } catch (e) {
+    return { reply: clean.replace(/[{}]/g, '').trim() };
   }
 }
 
