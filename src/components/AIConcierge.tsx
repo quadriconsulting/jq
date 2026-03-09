@@ -28,7 +28,19 @@ interface Message {
 
 const AIConcierge = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Array<Message>>([])
+  const [messages, setMessages] = useState<Array<Message>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('jq_chat_history')
+      if (saved) {
+        try {
+          return JSON.parse(saved)
+        } catch {
+          return []
+        }
+      }
+    }
+    return []
+  })
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [memory, setMemory] = useState<VisitorMemory | null>(null)
@@ -56,6 +68,12 @@ const AIConcierge = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+        if (messages.length > 0) {
+            localStorage.setItem('jq_chat_history', JSON.stringify(messages))
+        }
+    }, [messages])
 
   const suggestedQuestions = [
     "How do you integrate NVD/EPSS/KEV into risk scoring?",
@@ -98,6 +116,11 @@ const AIConcierge = () => {
     }
   }
 
+  const clearChat = () => {
+    setMessages([])
+    localStorage.removeItem('jq_chat_history')
+  }
+
   return (
     <>
       {/* Floating Button */}
@@ -115,10 +138,17 @@ const AIConcierge = () => {
               <div className="fixed bottom-4 right-4 left-4 sm:bottom-8 sm:right-8 sm:left-auto sm:w-96 z-50 h-[600px] glass border border-champagne/30 rounded-3xl flex flex-col shadow-2xl animate-glass-push origin-bottom-right">
           {/* Header */}
           <div className="p-6 border-b border-champagne/20 flex justify-between items-center bg-obsidian/80 backdrop-blur-xl rounded-t-3xl">
-            <div>
-              <h3 className="font-semibold text-lg">Ask about Jeremy's work</h3>
-              <p className="text-xs text-gray-500">Ask about AppSec, risk scoring, and automation.</p>
-            </div>
+             <div>
+               <div className="flex items-center gap-3">
+                 <h3 className="font-semibold text-lg">Ask about Jeremy's work</h3>
+                  {messages.length > 0 && (
+                    <button onClick={clearChat} className="text-xs px-2 py-1 rounded border border-gray-600 text-gray-400 hover:text-champagne hover:border-champagne/50 transition-all">
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500">Ask about AppSec, risk scoring, and automation.</p>
+              </div>
             <button
               onClick={() => setIsOpen(false)}
               className="hover:text-champagne transition-colors"
