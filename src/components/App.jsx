@@ -30,7 +30,25 @@ const TypewriterText = ({ text }) => {
 };
 // ---------------------------------------------------
 
+// --- ARCHITECTURE DIAGRAM COMPONENT ---
+const ArchitectureDiagram = () => (
+    <div className="w-full mt-4 bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 flex flex-col items-center justify-center min-h-[200px]">
+        <svg className="w-8 h-8 text-blue-400 mb-3 opacity-70 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <span className="text-sm text-slate-300 font-mono tracking-widest text-center">
+            [ INTERACTIVE ARCHITECTURE DIAGRAM ]
+        </span>
+        <p className="text-xs text-slate-500 mt-2 text-center max-w-[200px]">
+            Visual representation of Zero Trust & AppSec infrastructure.
+        </p>
+    </div>
+);
+// --------------------------------------
+
 export default function App() {
+    const [memory, setMemory] = useState(null);
+
     // Load chat history from Local Storage
     const [messages, setMessages] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -53,6 +71,26 @@ export default function App() {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const messagesEndRef = useRef(null);
+
+    // Manage persistent User UUID for Analytics
+    useEffect(() => {
+        const stored = localStorage.getItem('jq_visitor');
+        if (stored) {
+            try {
+                setMemory(JSON.parse(stored));
+                return;
+            } catch {
+                // corrupted — fall through to create fresh
+            }
+        }
+        const newMemory = {
+            uuid: crypto.randomUUID(),
+            firstVisit: new Date().toISOString(),
+            lastActiveSection: null
+        };
+        localStorage.setItem('jq_visitor', JSON.stringify(newMemory));
+        setMemory(newMemory);
+    }, []);
 
     // Save messages to Local Storage whenever they change
     useEffect(() => {
@@ -83,7 +121,7 @@ export default function App() {
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: userMsg })
+                body: JSON.stringify({ message: userMsg, uuid: memory?.uuid })
             });
             const data = await res.json();
 
@@ -91,6 +129,7 @@ export default function App() {
                 role: 'assistant',
                 content: data.reply,
                 action: data.action,
+                codeSnippet: data.codeSnippet,
                 suggested: data.suggested,
                 isNew: true // Trigger typewriter ONLY for new replies
             }]);
@@ -163,7 +202,7 @@ export default function App() {
 
                                     {/* Message Bubble */}
                                     <div className={`
-                    p-4 rounded-2xl shadow-sm text-[15px] leading-relaxed
+                    p-4 rounded-2xl shadow-sm text-[15px] leading-relaxed min-w-[200px]
                     ${isUser
                                             ? 'bg-gradient-to-tr from-blue-600 to-indigo-500 text-white rounded-tr-sm shadow-blue-900/20'
                                             : 'bg-slate-800/80 backdrop-blur-md text-slate-200 rounded-tl-sm border border-slate-700/50 shadow-black/20'}
@@ -176,11 +215,13 @@ export default function App() {
                                             <p className="whitespace-pre-wrap">{msg.content}</p>
                                         )}
 
-                                        {/* Action Buttons */}
+                                        {/* Action Components */}
                                         {msg.action === 'SHOW_CV' && (
                                             <a
                                                 href="/Jeremy_Quadri_CV.pdf"
-                                                download
+                                                download="Jeremy_Quadri_CV.pdf"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                                 className="mt-4 flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-5 py-2.5 rounded-xl border border-emerald-500/20 transition-all duration-200 text-sm font-semibold tracking-wide"
                                             >
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -190,7 +231,7 @@ export default function App() {
 
                                         {msg.action === 'SHOW_CALENDAR' && (
                                             <a
-                                                href="[https://calendly.com/your-link](https://calendly.com/your-link)"
+                                                href="https://calendar.app.google/c2YP1NDU8cGZieqv9"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="mt-4 flex items-center justify-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 px-5 py-2.5 rounded-xl border border-blue-500/20 transition-all duration-200 text-sm font-semibold tracking-wide"
@@ -198,6 +239,16 @@ export default function App() {
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                                 Book Strategy Call
                                             </a>
+                                        )}
+
+                                        {msg.action === 'RENDER_CODE' && msg.codeSnippet && (
+                                            <pre className="mt-4 bg-slate-900/80 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4 text-[13px] font-mono text-slate-300 overflow-x-auto">
+                                                <code>{msg.codeSnippet.content}</code>
+                                            </pre>
+                                        )}
+
+                                        {msg.action === 'RENDER_SVG' && (
+                                            <ArchitectureDiagram />
                                         )}
                                     </div>
                                 </div>
