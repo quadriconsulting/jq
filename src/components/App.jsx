@@ -11,7 +11,6 @@ import AIConcierge from './components/AIConcierge';
 export default function App() {
     return (
         <div className="relative min-h-screen bg-obsidian text-white selection:bg-champagne/30">
-            {/* Your actual portfolio website */}
             <Navbar />
             <Hero />
             <Features />
@@ -19,8 +18,6 @@ export default function App() {
             <Philosophy />
             <CTA />
             <Footer />
-
-            {/* The Bespoke Champagne AI Widget floating on top */}
             <AIConcierge />
         </div>
     );
