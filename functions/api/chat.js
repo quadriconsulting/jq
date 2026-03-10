@@ -365,15 +365,17 @@ function isExplicitPersonalIntent(q) {
   return keywords.some(k => s.includes(k));
 }
 
-function isAmbiguousAboutSelf(q) {
-  const s = q.toLowerCase().trim();
-  return (
-    s.includes("tell me about yourself") ||
-    s.includes("about yourself") ||
-    s.includes("tell me about you") ||
-    s === "about you" ||
-    s.includes("tell me about jeremy")
-  );
+function isAmbiguousAboutSelf(msg) {
+    const lower = msg.toLowerCase();
+
+    // 1. Check if it contains general "about you" phrasing
+    const hasGenericPrompt = /(tell me about (you|jeremy|yourself)|who (are you|is jeremy))/.test(lower);
+
+    // 2. Check if it contains specific professional/technical keywords
+    const hasTechFocus = /(sast|dast|experience|work|background|security|appsec|zero trust|architecture|code|skills)/.test(lower);
+
+    // It is ONLY ambiguous if it asks a generic question AND doesn't mention technical topics
+    return hasGenericPrompt && !hasTechFocus;
 }
 
 function suggestFollowups(wantPersonal) {

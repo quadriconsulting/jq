@@ -9,16 +9,16 @@ import Footer from './components/Footer';
 import AIConcierge from './components/AIConcierge';
 
 export default function App() {
-    return (
-        <div className="relative min-h-screen bg-obsidian text-white selection:bg-champagne/30">
-            <Navbar />
-            <Hero />
-            <Features />
-            <Protocol />
-            <Philosophy />
-            <CTA />
-            <Footer />
-            <AIConcierge />
-        </div>
-    );
+  return (
+    <div className="relative min-h-screen bg-obsidian text-white selection:bg-champagne/30">
+      <Navbar />
+      <Hero />
+      <Features />
+      <Protocol />
+      <Philosophy />
+      <CTA />
+      <Footer />
+      <AIConcierge />
+    </div>
+  );
 }
