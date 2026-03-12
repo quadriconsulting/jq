@@ -7,5 +7,8 @@
   "ai": { "binding": "AI" },
   "vectorize": [
     { "binding": "VEC_INDEX", "index_name": "jq-rag" }
+  ],
+  "kv_namespaces": [
+    { "binding": "CHAT_STATE", "id": "d6e9d22882bb474a955770ee2985194a" }
   ]
 }
