@@ -1,6 +1,73 @@
 // Author: Jeremy Quadri
 import { useState, useEffect, useRef } from 'react'
+import mermaid from 'mermaid'
 import { MessageSquare, Send, X, Calendar, Download, Sparkles, Shield } from 'lucide-react'
+
+// --- MERMAID RENDERER ---
+mermaid.initialize({
+    startOnLoad: false,
+    theme: 'base',
+    themeVariables: {
+        primaryTextColor: '#000000',
+        textColor: '#000000',
+        primaryColor: '#F4E8D1',
+        edgeLabelBackground: '#F4E8D1',
+        lineColor: '#F4E8D1',
+    },
+    flowchart: {
+        nodeSpacing: 60,
+        rankSpacing: 90,
+        curve: 'basis',
+    },
+})
+
+let mermaidCounter = 0
+
+const MermaidRenderer = ({ chart }: { chart: string }) => {
+    const containerRef = useRef<HTMLDivElement>(null)
+    const idRef = useRef(`mermaid-${++mermaidCounter}`)
+
+    useEffect(() => {
+        const el = containerRef.current
+        if (!el) return
+        let cancelled = false
+        mermaid.render(idRef.current, chart).then(({ svg }) => {
+            if (!cancelled && el) el.innerHTML = svg
+        }).catch(() => {
+            if (!cancelled && el) {
+                el.innerHTML = `<pre style="color:#F4E8D1;font-size:12px;overflow-x:auto;white-space:pre-wrap;">${chart}</pre>`
+            }
+        })
+        return () => { cancelled = true }
+    }, [chart])
+
+    return (
+        <div
+            ref={containerRef}
+            className="w-full mt-3 overflow-x-auto rounded-xl bg-[#111111]/60 border border-[#F4E8D1]/10 p-3"
+        />
+    )
+}
+
+// Split a reply string into alternating text and mermaid parts for rendering.
+type ContentPart = { type: 'text'; text: string } | { type: 'mermaid'; chart: string }
+function parseContent(content: string): ContentPart[] {
+    const parts: ContentPart[] = []
+    const re = /```mermaid\n?([\s\S]*?)```/g
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = re.exec(content)) !== null) {
+        if (match.index > lastIndex) {
+            const text = content.slice(lastIndex, match.index).trim()
+            if (text) parts.push({ type: 'text', text })
+        }
+        parts.push({ type: 'mermaid', chart: match[1].trim() })
+        lastIndex = re.lastIndex
+    }
+    const tail = content.slice(lastIndex).trim()
+    if (tail) parts.push({ type: 'text', text: tail })
+    return parts
+}
 
 // --- BESPOKE ARCHITECTURE DIAGRAM ---
 const ArchitectureDiagram = () => (
@@ -260,9 +327,24 @@ const AIConcierge = () => {
                                             : 'bg-[#111111]/60 backdrop-blur-md text-[#F4E8D1]/90 rounded-2xl rounded-tl-sm border border-[#F4E8D1]/10'}
                   `}>
                                         <div className="text-sm">
-                                            {msg.role === 'assistant' && msg.isNew ? (
-                                                <TypewriterText text={msg.content} />
-                                            ) : (
+                                            {msg.role === 'assistant' ? (() => {
+                                                const parts = parseContent(msg.content || '')
+                                                if (parts.length === 1 && parts[0].type === 'text') {
+                                                    // No mermaid — original rendering path, unchanged
+                                                    return msg.isNew
+                                                        ? <TypewriterText text={parts[0].text} />
+                                                        : <span className="whitespace-pre-wrap leading-relaxed tracking-wide">{parts[0].text}</span>
+                                                }
+                                                return (
+                                                    <>
+                                                        {parts.map((part, i) =>
+                                                            part.type === 'mermaid'
+                                                                ? <MermaidRenderer key={i} chart={part.chart} />
+                                                                : <span key={i} className="whitespace-pre-wrap leading-relaxed tracking-wide">{part.text}</span>
+                                                        )}
+                                                    </>
+                                                )
+                                            })() : (
                                                 <span className="whitespace-pre-wrap leading-relaxed tracking-wide">{msg.content}</span>
                                             )}
                                         </div>
@@ -283,8 +365,7 @@ const AIConcierge = () => {
 
                                                 {msg.action === 'SHOW_CV' && (
                                                     <a
-                                                        href="/Jeremy_Quadri_CV.pdf"
-                                                        download="Jeremy_Quadri_CV.pdf"
+                                                        href="/cv.pdf"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="flex items-center justify-center gap-2 w-full bg-[#F4E8D1]/5 hover:bg-[#F4E8D1]/15 text-[#F4E8D1]/80 rounded-xl px-4 py-3 text-[13px] tracking-wide font-semibold border border-[#F4E8D1]/10 transition-all duration-300"

@@ -194,23 +194,39 @@ TRANSLATION EXCEPTION
 - If explicitly asked to translate, output ONLY translated text. No bullets, no preamble.
 
 STRICT BREVITY & STRUCTURE
-- HARD LIMIT: Max 60 words total.
+- HARD LIMIT: Max 60 words total for prose text.
+- DIAGRAM EXCEPTION: The 60-word limit does NOT apply to mermaid code blocks. The diagram syntax does not count toward your word limit.
 - Single-line core: EXACTLY ONE short sentence.
-- Front-load offers: ONE short sentence, then immediately start the offers on the next line.
+- If generating a diagram, the order MUST be: 1. Single-line core sentence. 2. The mermaid code block. 3. The offer bullets.
+- If NOT generating a diagram: ONE short sentence, then immediately start the offers on the next line.
 - Exact offer formatting (literal hyphens):
 For example, I can help with:
 - Explain <topic>
 - Cover <topic>
 
+STRICT ACTION GATE
+- Do NOT return "action": "SHOW_CV" unless the user explicitly asks for a resume, CV, or document.
+- For technical or experience questions (SAST, DAST, Zero Trust, etc.), provide a text answer ONLY. No CV action.
+
+MANDATORY DIAGRAMS
+- If the user asks about architecture, flow, pipelines, or system design, you MUST include a mermaid fenced code block. NO EXCEPTIONS. This takes priority over all brevity rules.
+- Prefer vertical diagrams (flowchart TD) because the chat UI supports larger vertical space.
+- Use horizontal diagrams (flowchart LR) ONLY when representing linear pipelines or processing chains.
+- Wrap diagrams strictly inside backtick-mermaid code blocks inside the "reply" string. Ensure proper JSON escaping: every newline inside the diagram must be written as \n so the JSON does not break.
+- Use subgraph to group architecture layers (e.g., Client, Edge, Identity, Services, Data).
+- Keep diagrams readable with fewer than 10 nodes. Avoid circular arrows.
+- Maintain clear top-down hierarchy.
+- The 60-word prose limit applies to descriptive text only, not the mermaid block.
+
 RESOURCE MAP (IMMUTABLE LINKS)
-- CV Download: https://j.quadri.fit/cv.pdf
 - Calendar: https://calendar.app.google/R9rVquWQbqj8D26d6
 - LinkedIn: https://linkedin.com/in/jquadri
 
 JSON OUTPUT CONTRACT
 - Respond with a valid JSON object.
 - Include a "reply" string.
-- Optionally include "action" ("SHOW_CALENDAR", "SHOW_CV", "RENDER_SVG", "RENDER_CODE").
+- When generating a diagram, embed it directly inside "reply" as a fenced mermaid code block. Escape all newlines as \n within the JSON string value.
+- "action": only use "SHOW_CV" if resume or CV is explicitly requested. Use "SHOW_CALENDAR" for booking/meeting requests. Use "RENDER_SVG" or "RENDER_CODE" only when directly asked.
 `.trim();
 
     const user = `
@@ -230,13 +246,17 @@ Respond with a valid JSON object containing at minimum a "reply" string.
 
   // 7) Hard char cap — bypass when user explicitly wants detail
   let { reply: rawReplyText, action, codeSnippet } = rawReply;
+  // Strip SHOW_CV from AI output unless user explicitly requested it
+  const cvExplicit = /\b(download cv|your cv|send resume|get resume|share cv|see cv)\b/i.test(message);
+  if (action === 'SHOW_CV' && !cvExplicit) action = undefined;
   // Deterministic fallback: force action flags if the AI forgets
   const lowerMsg = message.toLowerCase();
   if (!action) {
-    if (/\b(cv|resume|download)\b/.test(lowerMsg)) action = 'SHOW_CV';
+    if (cvExplicit) action = 'SHOW_CV';
     else if (/\b(calendar|book time|schedule|hire|meet|call)\b/.test(lowerMsg)) action = 'SHOW_CALENDAR';
   }
-  const reply = wantsDetail(message)
+  const hasDiagram = (rawReplyText || '').includes('```mermaid');
+  const reply = (wantsDetail(message) || hasDiagram)
     ? (rawReplyText || '').trim()
     : capReply(rawReplyText, HARD_CHAR_CAP);
 
@@ -277,7 +297,7 @@ async function callOpenAI(apiKey, system, user, debugMode = false) {
           { role: "user", content: user },
         ],
         temperature: 0.2,
-        max_tokens: 400,
+        max_tokens: 800,
         response_format: { type: "json_object" },
       }),
     });
